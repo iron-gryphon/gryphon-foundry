@@ -28,9 +28,9 @@ The foundry provisions a dual-VPC architecture to simulate a true "Sneakernet" w
 │   ├── security/           # IAM, KMS, and Security Group configurations
 │   ├── sneakernet/         # Automation for EBS/S3 data transfer
 │   └── ocp-upi/            # Ignition-based OCP deployment logic
-├── envs/
-│   ├── sandbox/            # Default dev/test environment
-│   └── prod-hardened/      # High-security production-grade settings
+├── main.tf                 # Root-level config for sandbox
+├── variables.tf
+├── outputs.tf
 ├── scripts/                # Helper tools for oc-mirror and image sync
 └── README.md
 ```
