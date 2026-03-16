@@ -82,3 +82,8 @@ output "bastion_ssh_command" {
   description = "SSH command to connect to the bastion"
   value       = module.bastion.bastion_ssh_command
 }
+
+output "bastion_hostname" {
+  description = "Bastion hostname (bastion.<zone>) when Route53 hosted zone is configured"
+  value       = module.bastion.bastion_hostname
+}

@@ -112,8 +112,9 @@ Your AWS credentials must have permissions for:
 - **S3**: Bucket creation, versioning, encryption
 - **KMS**: Key creation and alias
 - **IAM**: Policy creation (for EBS snapshot sharing)
+- **Route53** (when `route53_hosted_zone_name` is set): GetHostedZone, ChangeResourceRecordSets for the sandbox hosted zone
 
-A minimal policy would include: `ec2:*`, `s3:*`, `kms:*`, `iam:CreatePolicy`, `iam:AttachUserPolicy` (or equivalent for the resources created by this project).
+A minimal policy would include: `ec2:*`, `s3:*`, `kms:*`, `iam:CreatePolicy`, `iam:AttachUserPolicy`, and `route53:GetHostedZone`, `route53:ChangeResourceRecordSets` (or equivalent for the resources created by this project).
 
 ---
 

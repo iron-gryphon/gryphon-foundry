@@ -71,3 +71,22 @@ EOT
     Role = "bastion"
   })
 }
+
+# -----------------------------------------------------------------------------
+# Route53: Bastion A record (when hosted zone is provided)
+# -----------------------------------------------------------------------------
+data "aws_route53_zone" "sandbox" {
+  count = var.route53_hosted_zone_name != "" ? 1 : 0
+
+  name = var.route53_hosted_zone_name
+}
+
+resource "aws_route53_record" "bastion" {
+  count = var.route53_hosted_zone_name != "" ? 1 : 0
+
+  zone_id = data.aws_route53_zone.sandbox[0].zone_id
+  name    = "bastion"
+  type    = "A"
+  ttl     = 300
+  records = [aws_instance.bastion.public_ip]
+}
