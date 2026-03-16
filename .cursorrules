@@ -1,0 +1,40 @@
+# gryphon-foundry: Terraform Project Rules
+
+## Security: No Secrets in Code
+
+- NEVER hardcode API keys, passwords, tokens, pull secrets, or credentials in .tf, .tfvars, or committed configs.
+- NEVER add default values for sensitive variables (aws_access_key, pull_secret, private_key, etc.).
+- ALWAYS use environment variables (TF_VAR_*), local .tfvars (gitignored), or external secret managers.
+- Document sensitive variables in variables.tf with sensitive = true and no default.
+- Use terraform.tfvars.example or .env.example with placeholders; instruct users to copy and fill locally.
+
+## Terraform Standards
+
+- Pin provider versions in required_providers.
+- Use descriptive variable names (e.g., vault_vpc_cidr, nest_vpc_cidr).
+- All environment-specific values must be variables; no hardcoding.
+- Provide useful outputs (VPC IDs, endpoint URLs) for downstream projects.
+- Format code with terraform fmt before committing.
+
+## After Making Changes
+
+Agents MUST run validation after editing Terraform:
+
+```bash
+./scripts/validate.sh
+```
+
+Or manually:
+1. terraform fmt -recursive -check -diff
+2. terraform init -backend=false && terraform validate
+3. terraform plan -out=/dev/null (if credentials available)
+
+## Project Structure
+
+- modules/: vpc, security, sneakernet, ocp-upi
+- envs/: sandbox, prod-hardened
+- scripts/: validate.sh, oc-mirror helpers
+
+## Commits
+
+Use Conventional Commits: feat:, fix:, docs:, etc.
