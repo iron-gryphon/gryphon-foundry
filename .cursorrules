@@ -32,7 +32,7 @@ Or manually:
 ## Project Structure
 
 - modules/: vpc, security, sneakernet, ocp-upi
-- envs/: sandbox, prod-hardened
+- Root-level: main.tf, variables.tf, outputs.tf (single sandbox environment)
 - scripts/: validate.sh, oc-mirror helpers
 
 ## Commits

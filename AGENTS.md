@@ -44,7 +44,7 @@ If `terraform plan` fails due to missing credentials or variables, at minimum ru
 ## 📐 Project Conventions
 
 - **Terraform:** Pin provider versions in `required_providers`; use descriptive variable names (e.g., `vault_vpc_cidr`).
-- **Structure:** Modules under `modules/`; environments under `envs/` (e.g., `envs/sandbox/`, `envs/prod-hardened/`).
+- **Structure:** Modules under `modules/`; root-level config (`main.tf`, `variables.tf`, `outputs.tf`) for the single sandbox environment.
 - **Commits:** Use [Conventional Commits](https://www.conventionalcommits.org/) (e.g., `feat:`, `fix:`, `docs:`).
 - **Security:** No hidden egress paths; preserve air-gap integrity for the Vault VPC.
 
@@ -54,7 +54,7 @@ If `terraform plan` fails due to missing credentials or variables, at minimum ru
 
 ```
 modules/       # vpc, security, sneakernet, ocp-upi
-envs/          # sandbox, prod-hardened
+*.tf           # main.tf, variables.tf, outputs.tf (root-level sandbox config)
 scripts/       # validate.sh, oc-mirror helpers
 ```
 
