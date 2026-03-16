@@ -59,3 +59,26 @@ output "ocp_upi_subnet_ids" {
   description = "Subnet IDs for OCP UPI deployment"
   value       = module.ocp_upi.vault_private_subnet_ids
 }
+
+output "ocp_node_summary" {
+  description = "OpenShift cluster node topology summary"
+  value       = module.ocp_upi.node_summary
+}
+
+# -----------------------------------------------------------------------------
+# Bastion Outputs
+# -----------------------------------------------------------------------------
+output "bastion_public_ip" {
+  description = "Public IP address of the bastion host (external route for SSH and OCP CLI)"
+  value       = module.bastion.bastion_public_ip
+}
+
+output "bastion_public_dns" {
+  description = "Public DNS name of the bastion host"
+  value       = module.bastion.bastion_public_dns
+}
+
+output "bastion_ssh_command" {
+  description = "SSH command to connect to the bastion"
+  value       = module.bastion.bastion_ssh_command
+}

@@ -88,11 +88,19 @@ resource "aws_security_group" "vault_api" {
   vpc_id      = var.vault_vpc_id
 
   ingress {
-    description = "HTTPS (OCP API)"
+    description = "HTTPS (OCP API) from Vault"
     from_port   = 6443
     to_port     = 6443
     protocol    = "tcp"
     cidr_blocks = [var.vault_vpc_cidr]
+  }
+
+  ingress {
+    description = "HTTPS (OCP API) from bastion in Nest"
+    from_port   = 6443
+    to_port     = 6443
+    protocol    = "tcp"
+    cidr_blocks = [var.nest_vpc_cidr]
   }
 
   ingress {
@@ -111,12 +119,28 @@ resource "aws_security_group" "vault_api" {
     cidr_blocks = [var.vault_vpc_cidr]
   }
 
+  ingress {
+    description = "HTTPS (OCP web console) from bastion in Nest"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = [var.nest_vpc_cidr]
+  }
+
   egress {
     description = "Allow outbound within Vault VPC"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = [var.vault_vpc_cidr]
+  }
+
+  egress {
+    description = "Allow outbound to Nest (bastion return traffic)"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = [var.nest_vpc_cidr]
   }
 
   tags = merge(var.tags, {

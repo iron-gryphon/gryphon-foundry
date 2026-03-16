@@ -59,3 +59,35 @@ tags = {
 # Optional: OCP cluster name
 # -----------------------------------------------------------------------------
 ocp_cluster_name = "gryphon-ocp"
+
+# -----------------------------------------------------------------------------
+# OCP Node Configuration (for UPI deployment)
+# -----------------------------------------------------------------------------
+# Control plane: 3 nodes, 4 vCPU, 16GB RAM, 120GB SSD each (m5.xlarge)
+ocp_control_plane = {
+  count            = 3
+  instance_type    = "m5.xlarge"
+  root_volume_size = 120
+}
+
+# Standard workers: 2 nodes, 4 vCPU, 16GB RAM, 120GB SSD each (m5.xlarge)
+ocp_worker = {
+  count            = 2
+  instance_type    = "m5.xlarge"
+  root_volume_size = 120
+}
+
+# GPU workers: 2 nodes with NVIDIA T4 (g4dn.xlarge)
+ocp_gpu_worker = {
+  count            = 2
+  instance_type    = "g4dn.xlarge"
+  root_volume_size = 120
+}
+
+# -----------------------------------------------------------------------------
+# Bastion Host (required - create key pair first: aws ec2 create-key-pair --key-name <name>)
+# -----------------------------------------------------------------------------
+bastion_key_name = "your-bastion-key-name"
+
+# Optional: Restrict SSH to specific IPs for security
+# bastion_ssh_allowed_cidrs = ["1.2.3.4/32"]

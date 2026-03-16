@@ -101,3 +101,30 @@ resource "aws_route_table_association" "vault_private" {
   subnet_id      = aws_subnet.vault_private[count.index].id
   route_table_id = aws_route_table.vault_private.id
 }
+
+# -----------------------------------------------------------------------------
+# VPC Peering: Nest <-> Vault (for bastion access to OCP)
+# -----------------------------------------------------------------------------
+resource "aws_vpc_peering_connection" "nest_to_vault" {
+  vpc_id      = aws_vpc.nest.id
+  peer_vpc_id = aws_vpc.vault.id
+  auto_accept = true
+
+  tags = merge(var.tags, {
+    Name = "${var.environment}-nest-vault-peering"
+  })
+}
+
+# Route: Nest public -> Vault (via peering)
+resource "aws_route" "nest_to_vault" {
+  route_table_id            = aws_route_table.nest_public.id
+  destination_cidr_block    = var.vault_vpc_cidr
+  vpc_peering_connection_id = aws_vpc_peering_connection.nest_to_vault.id
+}
+
+# Route: Vault -> Nest (via peering, for return traffic)
+resource "aws_route" "vault_to_nest" {
+  route_table_id            = aws_route_table.vault_private.id
+  destination_cidr_block    = var.nest_vpc_cidr
+  vpc_peering_connection_id = aws_vpc_peering_connection.nest_to_vault.id
+}
