@@ -118,6 +118,15 @@ variable "ocp_gpu_worker" {
 }
 
 # -----------------------------------------------------------------------------
+# Route53 (Optional - for sandbox hosted zone from Red Hat Demo Platform)
+# -----------------------------------------------------------------------------
+variable "route53_hosted_zone_name" {
+  description = "Route53 hosted zone name (e.g. sandbox.example.com) from the sandbox environment. When set, creates bastion.<zone> A record. Leave empty to skip."
+  type        = string
+  default     = ""
+}
+
+# -----------------------------------------------------------------------------
 # Bastion Host
 # -----------------------------------------------------------------------------
 variable "bastion_key_name" {

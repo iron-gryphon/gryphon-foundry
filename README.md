@@ -54,6 +54,16 @@ Override in `terraform.tfvars` using the `ocp_control_plane`, `ocp_worker`, and 
 
 ## 🚀 Getting Started
 
+### Request an AWS Environment
+
+1. Log in to [https://catalog.demo.redhat.com/](https://catalog.demo.redhat.com/)
+2. From the catalog, select **"AWS Blank Open Environment"**
+3. You will receive:
+   - The sandbox environment host name (Route53 hosted zone name)
+   - The AWS credentials
+
+Use the received information to set up your environment. The hosted zone name is used to create a `bastion.<zone>` DNS record for the jump host. See [SETUP.md](SETUP.md) for credential configuration.
+
 ### Prerequisites
 Before you begin forging your environment, ensure you have the following tools installed and configured:
 * **Terraform 1.x+**: To manage the infrastructure lifecycle.
@@ -70,7 +80,10 @@ Before you begin forging your environment, ensure you have the following tools i
 2.  **Configure Variables:**
     ```bash
     cp terraform.tfvars.example terraform.tfvars
-    # Edit terraform.tfvars with your AWS region, CIDRs, and availability zones
+    # Edit terraform.tfvars with:
+    #   - AWS region, CIDRs, and availability zones
+    #   - route53_hosted_zone_name: the hosted zone from your sandbox (e.g. sandbox.example.com)
+    #   - bastion_key_name: name of your EC2 key pair
     ```
 3.  **Configure AWS Credentials:**
     Use environment variables (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`) or `aws configure`. See [SETUP.md](SETUP.md) for details.
@@ -100,11 +113,12 @@ Set `bastion_key_name = "gryphon-bastion"` in `terraform.tfvars`.
 **Connect:**
 
 ```bash
-# Get the bastion public IP
-terraform output bastion_public_ip
+# When Route53 hosted zone is configured, use the bastion hostname:
+terraform output bastion_hostname   # e.g. bastion.sandbox.example.com
 
-# SSH to the bastion
-ssh -i bastion-key.pem ec2-user@$(terraform output -raw bastion_public_ip)
+# SSH to the bastion (by hostname when Route53 is set, or by IP)
+ssh -i bastion-key.pem ec2-user@$(terraform output -raw bastion_hostname)
+# Without Route53: ssh -i bastion-key.pem ec2-user@$(terraform output -raw bastion_public_ip)
 ```
 
 **Use OCP CLI:** Once connected, use `oc login` with your cluster's API URL (e.g. `https://api.<cluster>.<domain>:6443`) after the OpenShift cluster is deployed. Restrict SSH access by setting `bastion_ssh_allowed_cidrs` to your VPN or office IP range.
@@ -118,9 +132,9 @@ To reach the OpenShift web console from your laptop over the bastion:
    brew install sshuttle   # macOS
    ```
 
-2. **Run sshuttle** (replace `bastion-key.pem` and `10.1.0.0/16` with your Vault VPC CIDR if different):
+2. **Run sshuttle** (use `bastion_hostname` when Route53 is configured, otherwise `bastion_public_ip`; replace `10.1.0.0/16` with your Vault VPC CIDR if different):
    ```bash
-   sshuttle -r ec2-user@$(terraform output -raw bastion_public_ip) 10.1.0.0/16 -e "ssh -i bastion-key.pem"
+   sshuttle -r ec2-user@$(terraform output -raw bastion_hostname) 10.1.0.0/16 -e "ssh -i bastion-key.pem"
    ```
 
 3. **Add a hosts entry** for the console (get the LB IP from `oc get svc -n openshift-console` on the bastion):
@@ -130,7 +144,7 @@ To reach the OpenShift web console from your laptop over the bastion:
 
 4. **Open the console** in your browser: `https://console-openshift-console.apps.<cluster>.<domain>`
 
-**Alternative:** Use a SOCKS proxy: `ssh -D 1080 -i bastion-key.pem ec2-user@$(terraform output -raw bastion_public_ip)`, then configure your browser to use `socks5://127.0.0.1:1080`.
+**Alternative:** Use a SOCKS proxy: `ssh -D 1080 -i bastion-key.pem ec2-user@$(terraform output -raw bastion_hostname)`, then configure your browser to use `socks5://127.0.0.1:1080`.
 
 ---
 

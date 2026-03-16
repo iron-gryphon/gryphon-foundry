@@ -36,6 +36,12 @@ variable "oc_cli_version" {
   default     = "stable"
 }
 
+variable "route53_hosted_zone_name" {
+  description = "Route53 hosted zone name for bastion DNS record (bastion.<zone>). Leave empty to skip."
+  type        = string
+  default     = ""
+}
+
 variable "tags" {
   description = "Tags to apply to all resources"
   type        = map(string)

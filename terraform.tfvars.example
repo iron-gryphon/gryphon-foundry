@@ -56,6 +56,13 @@ tags = {
 }
 
 # -----------------------------------------------------------------------------
+# Route53 Hosted Zone (from Red Hat Demo Platform sandbox)
+# -----------------------------------------------------------------------------
+# The sandbox provides a hosted zone name - use it for bastion DNS (bastion.<zone>).
+# Leave empty ("") to skip Route53 record creation.
+route53_hosted_zone_name = "your-sandbox-hosted-zone.example.com"
+
+# -----------------------------------------------------------------------------
 # Optional: OCP cluster name
 # -----------------------------------------------------------------------------
 ocp_cluster_name = "gryphon-ocp"
