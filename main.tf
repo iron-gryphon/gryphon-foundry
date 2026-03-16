@@ -40,6 +40,7 @@ module "security" {
 
   environment              = var.environment
   nest_vpc_id              = module.vpc.nest_vpc_id
+  nest_vpc_cidr            = module.vpc.nest_vpc_cidr
   vault_vpc_id             = module.vpc.vault_vpc_id
   vault_vpc_cidr           = module.vpc.vault_vpc_cidr
   kms_deletion_window_days = var.kms_deletion_window_days
@@ -72,5 +73,24 @@ module "ocp_upi" {
   vault_api_security_group_id = module.security.vault_api_security_group_id
   vault_security_group_id     = module.security.vault_security_group_id
   cluster_name                = var.ocp_cluster_name
+  control_plane               = var.ocp_control_plane
+  worker                      = var.ocp_worker
+  gpu_worker                  = var.ocp_gpu_worker
   tags                        = var.tags
+}
+
+# -----------------------------------------------------------------------------
+# Bastion Module: Internet-accessible jump host with OCP CLI
+# -----------------------------------------------------------------------------
+module "bastion" {
+  source = "./modules/bastion"
+
+  environment            = var.environment
+  nest_vpc_id            = module.vpc.nest_vpc_id
+  nest_public_subnet_ids = module.vpc.nest_public_subnet_ids
+  key_name               = var.bastion_key_name
+  instance_type          = var.bastion_instance_type
+  ssh_allowed_cidrs      = var.bastion_ssh_allowed_cidrs
+  oc_cli_version         = var.bastion_oc_cli_version
+  tags                   = var.tags
 }

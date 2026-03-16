@@ -8,6 +8,11 @@ variable "nest_vpc_id" {
   type        = string
 }
 
+variable "nest_vpc_cidr" {
+  description = "CIDR block of the Nest VPC (for bastion access to OCP API)"
+  type        = string
+}
+
 variable "vault_vpc_id" {
   description = "ID of the Vault VPC"
   type        = string

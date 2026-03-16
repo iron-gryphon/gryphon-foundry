@@ -20,6 +20,22 @@ The foundry provisions a dual-VPC architecture to simulate a true "Sneakernet" w
 
 ---
 
+## 📏 Cluster Sizing
+
+The OpenShift cluster topology is configurable via Terraform variables. Default sizing targets FSI AI/ML workloads:
+
+| Node Type       | Count | Instance Type | vCPU | RAM  | Root Volume |
+|-----------------|-------|---------------|------|------|-------------|
+| Control plane   | 3     | `m5.xlarge`   | 4    | 16GB | 120GB SSD   |
+| Worker          | 2     | `m5.xlarge`   | 4    | 16GB | 120GB SSD   |
+| GPU worker      | 2     | `g4dn.xlarge` | 4    | 16GB | 120GB SSD   |
+
+GPU workers use **NVIDIA T4** GPUs for inference and training workloads (e.g., RHOAI, LLM serving).
+
+Override in `terraform.tfvars` using the `ocp_control_plane`, `ocp_worker`, and `ocp_gpu_worker` variables. Set `ocp_gpu_worker.count = 0` to disable GPU nodes. See [terraform.tfvars.example](terraform.tfvars.example) for the full configuration.
+
+---
+
 ## 📂 Repository Structure
 ```text
 .
@@ -27,7 +43,8 @@ The foundry provisions a dual-VPC architecture to simulate a true "Sneakernet" w
 │   ├── vpc/                # Provisions VPC-A (Nest) and VPC-B (Vault)
 │   ├── security/           # IAM, KMS, and Security Group configurations
 │   ├── sneakernet/         # Automation for EBS/S3 data transfer
-│   └── ocp-upi/            # Ignition-based OCP deployment logic
+│   ├── ocp-upi/            # Ignition-based OCP deployment logic
+│   └── bastion/            # Internet-accessible jump host with OCP CLI
 ├── main.tf                 # Root-level config for sandbox
 ├── variables.tf
 ├── outputs.tf
@@ -66,6 +83,54 @@ Before you begin forging your environment, ensure you have the following tools i
     terraform plan -var-file=terraform.tfvars -out=forge.plan
     terraform apply "forge.plan"
     ```
+
+### Bastion Host
+
+A bastion host is deployed in the Nest (connected) VPC and can reach the OCP API in the Vault via VPC peering. It comes pre-installed with the OpenShift CLI (`oc`) for cluster management.
+
+**Prerequisites:** Create an EC2 key pair before applying:
+
+```bash
+aws ec2 create-key-pair --key-name gryphon-bastion --query 'KeyMaterial' --output text > bastion-key.pem
+chmod 400 bastion-key.pem
+```
+
+Set `bastion_key_name = "gryphon-bastion"` in `terraform.tfvars`.
+
+**Connect:**
+
+```bash
+# Get the bastion public IP
+terraform output bastion_public_ip
+
+# SSH to the bastion
+ssh -i bastion-key.pem ec2-user@$(terraform output -raw bastion_public_ip)
+```
+
+**Use OCP CLI:** Once connected, use `oc login` with your cluster's API URL (e.g. `https://api.<cluster>.<domain>:6443`) after the OpenShift cluster is deployed. Restrict SSH access by setting `bastion_ssh_allowed_cidrs` to your VPN or office IP range.
+
+### Accessing the OpenShift Web Console (sshuttle / SOCKS)
+
+To reach the OpenShift web console from your laptop over the bastion:
+
+1. **Install sshuttle** (transparent VPN over SSH):
+   ```bash
+   brew install sshuttle   # macOS
+   ```
+
+2. **Run sshuttle** (replace `bastion-key.pem` and `10.1.0.0/16` with your Vault VPC CIDR if different):
+   ```bash
+   sshuttle -r ec2-user@$(terraform output -raw bastion_public_ip) 10.1.0.0/16 -e "ssh -i bastion-key.pem"
+   ```
+
+3. **Add a hosts entry** for the console (get the LB IP from `oc get svc -n openshift-console` on the bastion):
+   ```bash
+   # /etc/hosts: <console-lb-ip>  console-openshift-console.apps.<cluster>.<domain>
+   ```
+
+4. **Open the console** in your browser: `https://console-openshift-console.apps.<cluster>.<domain>`
+
+**Alternative:** Use a SOCKS proxy: `ssh -D 1080 -i bastion-key.pem ec2-user@$(terraform output -raw bastion_public_ip)`, then configure your browser to use `socks5://127.0.0.1:1080`.
 
 ---
 

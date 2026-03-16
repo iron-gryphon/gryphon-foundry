@@ -71,3 +71,74 @@ variable "ocp_cluster_name" {
   type        = string
   default     = "gryphon-ocp"
 }
+
+# -----------------------------------------------------------------------------
+# OCP Node Configuration
+# -----------------------------------------------------------------------------
+variable "ocp_control_plane" {
+  description = "Control plane node configuration (masters)"
+  type = object({
+    count            = number
+    instance_type    = string
+    root_volume_size = number
+  })
+  default = {
+    count            = 3
+    instance_type    = "m5.xlarge" # 4 vCPU, 16GB RAM
+    root_volume_size = 120
+  }
+}
+
+variable "ocp_worker" {
+  description = "Standard worker node configuration"
+  type = object({
+    count            = number
+    instance_type    = string
+    root_volume_size = number
+  })
+  default = {
+    count            = 2
+    instance_type    = "m5.xlarge" # 4 vCPU, 16GB RAM
+    root_volume_size = 120
+  }
+}
+
+variable "ocp_gpu_worker" {
+  description = "GPU worker node configuration (NVIDIA T4). Set count to 0 to disable."
+  type = object({
+    count            = number
+    instance_type    = string
+    root_volume_size = number
+  })
+  default = {
+    count            = 2
+    instance_type    = "g4dn.xlarge" # 4 vCPU, 16GB RAM, 1x NVIDIA T4
+    root_volume_size = 120
+  }
+}
+
+# -----------------------------------------------------------------------------
+# Bastion Host
+# -----------------------------------------------------------------------------
+variable "bastion_key_name" {
+  description = "Name of existing EC2 key pair for SSH access to bastion. Create one in AWS Console or via: aws ec2 create-key-pair --key-name <name> --query 'KeyMaterial' --output text > key.pem"
+  type        = string
+}
+
+variable "bastion_instance_type" {
+  description = "EC2 instance type for bastion host"
+  type        = string
+  default     = "t3.micro"
+}
+
+variable "bastion_ssh_allowed_cidrs" {
+  description = "CIDR blocks allowed to SSH to bastion. Restrict to VPN or office IP for security."
+  type        = list(string)
+  default     = ["0.0.0.0/0"]
+}
+
+variable "bastion_oc_cli_version" {
+  description = "OpenShift CLI version to install on bastion (e.g. 4.15.0, stable)"
+  type        = string
+  default     = "stable"
+}
