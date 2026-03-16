@@ -40,7 +40,7 @@ The foundry provisions a dual-VPC architecture to simulate a true "Sneakernet" w
 ### Prerequisites
 Before you begin forging your environment, ensure you have the following tools installed and configured:
 * **Terraform 1.x+**: To manage the infrastructure lifecycle.
-* **AWS CLI**: Configured with credentials that have permission to manage VPCs, EC2, and S3.
+* **AWS CLI**: Configured with credentials that have permission to manage VPCs, EC2, S3, and KMS. See [SETUP.md](SETUP.md) for credential configuration.
 * **OpenShift Installer & CLI (oc)**: Necessary for generating ignition files and interacting with the air-gapped cluster.
 * **Red Hat Pull Secret**: Required to mirror images into the local registry.
 
@@ -50,17 +50,20 @@ Before you begin forging your environment, ensure you have the following tools i
     git clone [https://github.com/iron-gryphon/gryphon-foundry.git](https://github.com/iron-gryphon/gryphon-foundry.git)
     cd gryphon-foundry
     ```
-2.  **Initialize Terraform:**
+2.  **Configure Variables:**
     ```bash
-    # This will download the AWS provider and initialize modules
+    cp terraform.tfvars.example terraform.tfvars
+    # Edit terraform.tfvars with your AWS region, CIDRs, and availability zones
+    ```
+3.  **Configure AWS Credentials:**
+    Use environment variables (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`) or `aws configure`. See [SETUP.md](SETUP.md) for details.
+4.  **Initialize Terraform:**
+    ```bash
     terraform init
     ```
-3.  **Forge the Environment:**
+5.  **Forge the Environment:**
     ```bash
-    # Review the changes that will be made to your AWS account
-    terraform plan -out=forge.plan
-
-    # Apply the changes to create the Nest and the Vault
+    terraform plan -var-file=terraform.tfvars -out=forge.plan
     terraform apply "forge.plan"
     ```
 

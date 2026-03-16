@@ -1,0 +1,61 @@
+# =============================================================================
+# gryphon-foundry: terraform.tfvars.example
+# =============================================================================
+# Copy this file to terraform.tfvars and fill in your values:
+#   cp terraform.tfvars.example terraform.tfvars
+#
+# SECURITY: terraform.tfvars is gitignored. Never commit credentials.
+# AWS credentials are NOT set here - use environment variables or ~/.aws/credentials.
+# See SETUP.md for credential and endpoint configuration.
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Environment
+# -----------------------------------------------------------------------------
+environment = "sandbox"
+
+# -----------------------------------------------------------------------------
+# AWS Region & Availability Zones
+# -----------------------------------------------------------------------------
+aws_region = "us-east-1"
+
+availability_zones = [
+  "us-east-1a",
+  "us-east-1b",
+  "us-east-1c"
+]
+
+# -----------------------------------------------------------------------------
+# Nest VPC (Connected - for oc-mirror, datasets, Terraform providers)
+# -----------------------------------------------------------------------------
+nest_vpc_cidr = "10.0.0.0/16"
+
+nest_public_subnet_cidrs = [
+  "10.0.1.0/24",
+  "10.0.2.0/24",
+  "10.0.3.0/24"
+]
+
+# -----------------------------------------------------------------------------
+# Vault VPC (Isolated - air-gapped for OCP/RHOAI)
+# -----------------------------------------------------------------------------
+vault_vpc_cidr = "10.1.0.0/16"
+
+vault_private_subnet_cidrs = [
+  "10.1.1.0/24",
+  "10.1.2.0/24",
+  "10.1.3.0/24"
+]
+
+# -----------------------------------------------------------------------------
+# Optional: Tags
+# -----------------------------------------------------------------------------
+tags = {
+  Team        = "iron-gryphon"
+  CostCenter  = "fsi-ai"
+}
+
+# -----------------------------------------------------------------------------
+# Optional: OCP cluster name
+# -----------------------------------------------------------------------------
+ocp_cluster_name = "gryphon-ocp"
