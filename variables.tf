@@ -73,51 +73,6 @@ variable "ocp_cluster_name" {
 }
 
 # -----------------------------------------------------------------------------
-# OCP Node Configuration
-# -----------------------------------------------------------------------------
-variable "ocp_control_plane" {
-  description = "Control plane node configuration (masters)"
-  type = object({
-    count            = number
-    instance_type    = string
-    root_volume_size = number
-  })
-  default = {
-    count            = 3
-    instance_type    = "m5.xlarge" # 4 vCPU, 16GB RAM
-    root_volume_size = 120
-  }
-}
-
-variable "ocp_worker" {
-  description = "Standard worker node configuration"
-  type = object({
-    count            = number
-    instance_type    = string
-    root_volume_size = number
-  })
-  default = {
-    count            = 2
-    instance_type    = "m5.xlarge" # 4 vCPU, 16GB RAM
-    root_volume_size = 120
-  }
-}
-
-variable "ocp_gpu_worker" {
-  description = "GPU worker node configuration (NVIDIA T4). Set count to 0 to disable."
-  type = object({
-    count            = number
-    instance_type    = string
-    root_volume_size = number
-  })
-  default = {
-    count            = 2
-    instance_type    = "g4dn.xlarge" # 4 vCPU, 16GB RAM, 1x NVIDIA T4
-    root_volume_size = 120
-  }
-}
-
-# -----------------------------------------------------------------------------
 # Route53 (Optional - for sandbox hosted zone from Red Hat Demo Platform)
 # -----------------------------------------------------------------------------
 variable "route53_hosted_zone_name" {

@@ -24,33 +24,6 @@ variable "cluster_name" {
   default     = "gryphon-ocp"
 }
 
-variable "control_plane" {
-  description = "Control plane node configuration"
-  type = object({
-    count            = number
-    instance_type    = string
-    root_volume_size = number
-  })
-}
-
-variable "worker" {
-  description = "Standard worker node configuration"
-  type = object({
-    count            = number
-    instance_type    = string
-    root_volume_size = number
-  })
-}
-
-variable "gpu_worker" {
-  description = "GPU worker node configuration"
-  type = object({
-    count            = number
-    instance_type    = string
-    root_volume_size = number
-  })
-}
-
 variable "tags" {
   description = "Tags to apply to all resources"
   type        = map(string)

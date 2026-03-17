@@ -73,9 +73,6 @@ module "ocp_upi" {
   vault_api_security_group_id = module.security.vault_api_security_group_id
   vault_security_group_id     = module.security.vault_security_group_id
   cluster_name                = var.ocp_cluster_name
-  control_plane               = var.ocp_control_plane
-  worker                      = var.ocp_worker
-  gpu_worker                  = var.ocp_gpu_worker
   tags                        = var.tags
 }
 
