@@ -17,7 +17,7 @@ permissions:
 jobs:
   notify-main:
     name: Notify - Main branch update
-    if: github.event_name == 'push' && secrets.SLACK_WEBHOOK_URL != ''
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - name: Notify Slack Workflow
@@ -30,6 +30,7 @@ jobs:
           COMPARE_URL: ${{ github.event.compare }}
           BRANCH: ${{ github.ref_name }}
         run: |
+          if [ -z "$SLACK_WEBHOOK_URL" ]; then echo "Skipping - SLACK_WEBHOOK_URL not configured"; exit 0; fi
           SHORT_SHA="${COMMIT_SHA:0:7}"
           MSG_TRUNCATED=$(echo "$COMMIT_MSG" | head -c 200)
 
@@ -56,7 +57,7 @@ jobs:
 
   notify-dependabot:
     name: Notify - Dependabot PR
-    if: github.event_name == 'pull_request' && github.actor == 'dependabot[bot]' && secrets.SLACK_WEBHOOK_URL != ''
+    if: github.event_name == 'pull_request' && github.actor == 'dependabot[bot]'
     runs-on: ubuntu-latest
     steps:
       - name: Notify Slack Workflow
@@ -67,6 +68,7 @@ jobs:
           PR_NUM: ${{ github.event.pull_request.number }}
           PR_BODY: ${{ github.event.pull_request.body }}
         run: |
+          if [ -z "$SLACK_WEBHOOK_URL" ]; then echo "Skipping - SLACK_WEBHOOK_URL not configured"; exit 0; fi
           BODY_TRUNCATED=$(echo "$PR_BODY" | head -c 300)
 
           # Flat JSON payload for Slack Workflow webhook (no nested objects)
