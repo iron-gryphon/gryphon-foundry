@@ -6,10 +6,10 @@ name: Slack Notifications
 
 on:
   push:
-    branches: [main, master]
+    branches: [main, master, dev]
   pull_request:
     types: [opened]
-    branches: [main, master]
+    branches: [main, master, dev]
 
 permissions:
   contents: read
