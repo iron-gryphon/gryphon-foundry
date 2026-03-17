@@ -2,7 +2,7 @@
 
 **Forge secure, air-gapped foundations for FSI AI/ML workloads.**
 
-[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) [![Terraform Validate](https://github.com/iron-gryphon/gryphon-foundry/actions/workflows/terraform-validate.yml/badge.svg)](https://github.com/iron-gryphon/gryphon-foundry/actions/workflows/terraform-validate.yml)
 
 ## 🏗️ The Vision
 The **Iron Gryphon Squad** (Red Hat FSI AI) provides this repository as the "Foundry"—a baseline infrastructure-as-code (IaC) template. It is designed to establish a logically isolated, air-gapped AWS environment that replicates the security requirements of the world’s most regulated financial institutions.
