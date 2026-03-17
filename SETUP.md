@@ -127,3 +127,85 @@ After making changes, run:
 ```
 
 This runs `terraform fmt`, `terraform init -backend=false`, and `terraform validate`.
+
+---
+
+## Slack Notifications (Optional)
+
+The `.github/workflows/slack-notify.yml` workflow triggers a **Slack Workflow** when:
+
+- **Main branch updates** – New commits are pushed or merged to `main` or `master`
+- **Dependabot PRs** – A new dependency update PR is opened
+
+Uses Slack Workflow Builder (webhook trigger) instead of an Incoming Webhook app. Requires a [Slack paid plan](https://slack.com/pricing).
+
+### Setup
+
+1. **Create a Slack Workflow with a webhook trigger**
+   - In Slack: **Settings & administration** → **Workflow Builder** → **Create** → **From scratch**
+   - Add trigger: **Webhook** → **Add variable** for each payload field (see below)
+   - Add step: **Send a message to a channel** – use the variables to build your message
+   - Copy the webhook URL (format: `https://hooks.slack.com/triggers/T.../.../...`)
+
+2. **Add the secret to GitHub**
+   - Repo → **Settings** → **Secrets and variables** → **Actions**
+   - New repository secret: `SLACK_WEBHOOK_URL` = your workflow webhook URL
+
+### Payload variables (add these to your webhook trigger)
+
+**Main branch** (`event_type: main_update`):
+
+| Variable       | Description                    |
+|----------------|--------------------------------|
+| `event_type`   | `main_update`                  |
+| `repo`         | Repository (e.g. `owner/repo`) |
+| `branch`       | Branch name                    |
+| `commit_sha`   | Short commit SHA (7 chars)     |
+| `commit_message` | Commit message (truncated)  |
+| `author`       | Commit author                  |
+| `compare_url`  | URL to view changes            |
+
+**Dependabot PR** (`event_type: dependabot_pr`):
+
+| Variable       | Description                    |
+|----------------|--------------------------------|
+| `event_type`   | `dependabot_pr`                |
+| `pr_number`    | PR number                      |
+| `pr_title`     | PR title                       |
+| `pr_url`       | URL to the PR                  |
+| `pr_body`      | PR body (truncated)            |
+
+In your workflow, add a **Send a message** step and reference variables like `{{event_type}}`, `{{repo}}`, etc. Use `{{compare_url}}` or `{{pr_url}}` as links.
+
+### Example message templates
+
+**Main branch update** – Use in your "Send a message" step when `event_type` is `main_update`:
+
+```
+🦅 *Main Branch Updated*
+
+*Repository:* {{repo}}
+*Branch:* {{branch}}
+*Commit:* <{{compare_url}}|{{commit_sha}}>
+*Author:* {{author}}
+
+*Message:* {{commit_message}}
+
+<{{compare_url}}|View changes>
+```
+
+**Dependabot PR** – Use in your "Send a message" step when `event_type` is `dependabot_pr`:
+
+```
+📦 *Dependabot Dependency Update*
+
+*PR #{{pr_number}}:* {{pr_title}}
+
+{{pr_body}}
+
+<{{pr_url}}|View PR>
+```
+
+> **Tip:** If you use a single workflow for both event types, add a **Branch** step before "Send a message" and route by `event_type` (e.g., `main_update` → main message template, `dependabot_pr` → Dependabot message template).
+
+If `SLACK_WEBHOOK_URL` is not set, the notification jobs are skipped (no failure). To fully disable notifications, remove or disable the `slack-notify.yml` workflow.
