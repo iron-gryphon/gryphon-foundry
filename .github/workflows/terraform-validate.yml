@@ -2,9 +2,9 @@ name: Terraform Validate
 
 on:
   push:
-    branches: [main, master]
+    branches: [main, master, dev]
   pull_request:
-    branches: [main, master]
+    branches: [main, master, dev]
 
 permissions:
   contents: read
