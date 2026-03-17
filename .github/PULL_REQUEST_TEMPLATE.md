@@ -2,6 +2,8 @@
 
 <!-- Describe what this PR does. Be specific about modules touched (vpc, security, sneakernet, ocp-upi, bastion) and why. -->
 
+> **Branch workflow:** PRs should target `dev` first. Changes reach `main` only after merge from `dev`. See [CONTRIBUTING.md](../CONTRIBUTING.md) for details.
+
 ## Type of Change
 
 - [ ] `feat:` New feature or capability
