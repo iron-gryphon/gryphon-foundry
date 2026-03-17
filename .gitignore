@@ -37,3 +37,4 @@ override.tf.json
 terraform.rc
 bastion-key.pem
 forge.plan
+foundry-outputs.json
