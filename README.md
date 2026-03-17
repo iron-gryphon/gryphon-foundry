@@ -134,6 +134,73 @@ To reach the OpenShift web console from your laptop over the bastion:
 
 ---
 
+## 🔧 UPI Project: Expectations and Consuming Foundry Outputs
+
+The foundry provisions infrastructure only. The **UPI project** (e.g., `gryphon-ocp-upi`) is responsible for deploying the OpenShift cluster. This section describes what the UPI project must do and how to consume foundry outputs.
+
+### What the UPI Project Is Expected to Do
+
+1. **Cluster sizing** – Define control plane, worker, and GPU worker counts, instance types, and root volume sizes.
+2. **Generate ignition configs** – Run `openshift-install create ignition-configs` (with pull secret from a secure source).
+3. **Provision EC2 instances** – Create bootstrap, control plane, and worker nodes in the **Vault private subnets** using the security groups provided by the foundry.
+4. **Create load balancers** – NLB/ALB for the API server and ingress (console, `*.apps`).
+5. **Create Route53 records** – In the sandbox hosted zone:
+   - `api.<cluster>.<domain>` → API load balancer
+   - `*.apps.<cluster>.<domain>` → Ingress load balancer
+6. **Complete bootstrap** – Approve CSRs and wait for the cluster to become ready.
+
+### How to Pass Foundry Outputs to the UPI Project
+
+From the **gryphon-foundry** directory (after `terraform apply`), export outputs for the UPI project:
+
+**Option A: JSON (for Ansible, scripts, or automation)**
+
+```bash
+cd gryphon-foundry
+terraform output -json > foundry-outputs.json
+```
+
+**Option B: Individual outputs (for manual use or CI)**
+
+```bash
+# Required for UPI
+terraform output -raw ocp_upi_subnet_ids      # Vault private subnet IDs for node placement
+terraform output -raw vault_api_security_group_id
+terraform output -raw vault_security_group_id
+terraform output -raw ocp_cluster_name        # e.g. gryphon-ocp
+terraform output -raw ocp_base_domain         # e.g. sandbox3704.opentlc.com (empty if no Route53)
+
+# Bastion (for SSH jump host, oc login)
+terraform output -raw bastion_hostname        # or bastion_public_ip if no Route53
+```
+
+**Option C: Environment variables (for Ansible extra vars or shell)**
+
+```bash
+export FOUNDRY_OCP_SUBNET_IDS=$(terraform output -raw ocp_upi_subnet_ids | tr -d '"[]' | tr ',' ' ')
+export FOUNDRY_VAULT_API_SG=$(terraform output -raw vault_api_security_group_id)
+export FOUNDRY_VAULT_SG=$(terraform output -raw vault_security_group_id)
+export FOUNDRY_CLUSTER_NAME=$(terraform output -raw ocp_cluster_name)
+export FOUNDRY_BASE_DOMAIN=$(terraform output -raw ocp_base_domain)
+export FOUNDRY_BASTION=$(terraform output -raw bastion_hostname)
+```
+
+### Foundry Outputs Reference (UPI-relevant)
+
+| Output | Description |
+|--------|-------------|
+| `ocp_upi_subnet_ids` | Vault private subnet IDs for OCP node placement |
+| `vault_api_security_group_id` | Security group for API server (6443) and ingress (443) |
+| `vault_security_group_id` | Security group for node-to-node traffic |
+| `ocp_cluster_name` | Cluster name (used in `api.<cluster>.<domain>`) |
+| `ocp_base_domain` | Base domain for DNS (Route53 zone); empty if not set |
+| `bastion_hostname` | Bastion FQDN for SSH (when Route53 is configured) |
+| `bastion_public_ip` | Bastion IP (fallback when no Route53) |
+
+The UPI project should use the bastion as the jump host for deployment and `oc login` after the cluster is ready.
+
+---
+
 ## 🔮 Downstream Projects
 This foundry is built to serve as the unified infrastructure layer for the following Iron Gryphon initiatives:
 
