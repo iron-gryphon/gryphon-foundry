@@ -53,11 +53,21 @@ output "vault_receiving_bucket_name" {
 }
 
 # -----------------------------------------------------------------------------
-# OCP UPI Outputs
+# OCP UPI Outputs (consumed by the UPI project)
 # -----------------------------------------------------------------------------
 output "ocp_upi_subnet_ids" {
-  description = "Subnet IDs for OCP UPI deployment"
+  description = "Subnet IDs for OCP UPI deployment (Vault private subnets)"
   value       = module.ocp_upi.vault_private_subnet_ids
+}
+
+output "ocp_cluster_name" {
+  description = "OpenShift cluster name for UPI (used in api.<cluster>.<domain>)"
+  value       = module.ocp_upi.cluster_name
+}
+
+output "ocp_base_domain" {
+  description = "Base domain for OCP DNS (Route53 hosted zone). Empty if not configured."
+  value       = var.route53_hosted_zone_name != "" ? trimsuffix(var.route53_hosted_zone_name, ".") : ""
 }
 
 # -----------------------------------------------------------------------------
