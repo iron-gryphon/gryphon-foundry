@@ -60,11 +60,6 @@ output "ocp_upi_subnet_ids" {
   value       = module.ocp_upi.vault_private_subnet_ids
 }
 
-output "ocp_node_summary" {
-  description = "OpenShift cluster node topology summary"
-  value       = module.ocp_upi.node_summary
-}
-
 # -----------------------------------------------------------------------------
 # Bastion Outputs
 # -----------------------------------------------------------------------------

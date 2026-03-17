@@ -18,21 +18,7 @@ The foundry provisions a dual-VPC architecture to simulate a true "Sneakernet" w
 2.  **VPC-B (The Vault):** The "isolated" VPC. It has **no** Internet Gateway (IGW) or NAT Gateway. This is where Red Hat OpenShift (OCP) and OpenShift AI (RHOAI) are deployed.
 3.  **The Bridge:** Data movement is managed via manual/automated EBS snapshot sharing or S3 object replication between the two VPCs to maintain air-gap integrity.
 
----
-
-## 📏 Cluster Sizing
-
-The OpenShift cluster topology is configurable via Terraform variables. Default sizing targets FSI AI/ML workloads:
-
-| Node Type       | Count | Instance Type | vCPU | RAM  | Root Volume |
-|-----------------|-------|---------------|------|------|-------------|
-| Control plane   | 3     | `m5.xlarge`   | 4    | 16GB | 120GB SSD   |
-| Worker          | 2     | `m5.xlarge`   | 4    | 16GB | 120GB SSD   |
-| GPU worker      | 2     | `g4dn.xlarge` | 4    | 16GB | 120GB SSD   |
-
-GPU workers use **NVIDIA T4** GPUs for inference and training workloads (e.g., RHOAI, LLM serving).
-
-Override in `terraform.tfvars` using the `ocp_control_plane`, `ocp_worker`, and `ocp_gpu_worker` variables. Set `ocp_gpu_worker.count = 0` to disable GPU nodes. See [terraform.tfvars.example](terraform.tfvars.example) for the full configuration.
+**Cluster sizing** (control plane, worker, GPU worker counts and instance types) is configured in the **UPI project** (e.g., gryphon-ocp-upi), not in this foundry.
 
 ---
 
