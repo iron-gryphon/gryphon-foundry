@@ -44,6 +44,12 @@ variable "hosted_zone_id" {
   default     = ""
 }
 
+variable "create_route53_record" {
+  description = "When true, create Route53 A record for mirror.<base_domain>. Use this for count (plan-time known); hosted_zone_id may be unknown until apply."
+  type        = bool
+  default     = false
+}
+
 variable "instance_type" {
   description = "EC2 instance type for registry host"
   type        = string
