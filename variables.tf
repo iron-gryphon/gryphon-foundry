@@ -22,7 +22,7 @@ variable "aws_region" {
 }
 
 variable "availability_zones" {
-  description = "List of availability zones for subnet placement (e.g., [\"us-east-1a\", \"us-east-1b\"])"
+  description = "List of availability zones for subnet placement (e.g., [\"us-east-2a\", \"us-east-2b\"])"
   type        = list(string)
 }
 
@@ -72,11 +72,62 @@ variable "ocp_cluster_name" {
   default     = "gryphon-ocp"
 }
 
+variable "create_ingress_certificate" {
+  description = "When true, create ACM certificate for OpenShift ingress (*.apps.<cluster>.<domain>). Requires route53_hosted_zone_name for public certs, or use_ingress_private_ca for internal domains."
+  type        = bool
+  default     = false
+}
+
+variable "use_ingress_private_ca" {
+  description = "When true with create_ingress_certificate, use ACM Private CA (for internal domains like fsi.internal). When false, use public ACM with DNS validation."
+  type        = bool
+  default     = false
+}
+
+variable "ocp_ingress_base_domain" {
+  description = "Base domain for ingress certificate (e.g., fsi.internal). When empty, uses route53_hosted_zone_name. Use for internal domains when route53 zone differs."
+  type        = string
+  default     = ""
+}
+
+variable "ocp_version" {
+  description = "OpenShift/RHCOS version for AMI import (e.g., 4.20, 4.21)"
+  type        = string
+  default     = "4.20"
+}
+
+# -----------------------------------------------------------------------------
+# RHCOS AMI Import (disconnected/locked-down AWS)
+# -----------------------------------------------------------------------------
+variable "create_rhcos_ami" {
+  description = "When true, create RHCOS AMI import infrastructure and optionally import. Set false to skip (e.g. using Marketplace or manual copy)."
+  type        = bool
+  default     = true
+}
+
+variable "import_rhcos_ami" {
+  description = "When true, import RHCOS from mirror.openshift.com into your account. Requires curl, aws CLI; takes ~15-20 min. Set false if AMI already exists or to skip import."
+  type        = bool
+  default     = true
+}
+
+variable "rhcos_mirror_base" {
+  description = "RHCOS mirror path (e.g. '4.20/latest' or 'latest'). Empty defaults to ocp_version/latest."
+  type        = string
+  default     = ""
+}
+
 # -----------------------------------------------------------------------------
 # Route53 (Optional - for sandbox hosted zone from Red Hat Demo Platform)
 # -----------------------------------------------------------------------------
 variable "route53_hosted_zone_name" {
-  description = "Route53 hosted zone name (e.g. sandbox.example.com) from the sandbox environment. When set, creates bastion.<zone> A record. Leave empty to skip."
+  description = "Route53 hosted zone name (e.g. sandbox.example.com) from the sandbox environment. When set, creates bastion.<zone> A record. Used for OCP DNS when ocp_base_domain is empty. Leave empty to skip."
+  type        = string
+  default     = ""
+}
+
+variable "ocp_base_domain" {
+  description = "Base domain for OCP DNS (api, api-int, *.apps). When set and different from route53_hosted_zone_name (e.g. fsi.internal), foundry creates a private hosted zone for it. When empty, uses route53_hosted_zone_name. Must match gryphon-forge base_domain."
   type        = string
   default     = ""
 }
@@ -105,4 +156,19 @@ variable "bastion_oc_cli_version" {
   description = "OpenShift CLI version to install on bastion (e.g. 4.15.0, stable)"
   type        = string
   default     = "stable"
+}
+
+# -----------------------------------------------------------------------------
+# Mirror Registry (disconnected OCP install)
+# -----------------------------------------------------------------------------
+variable "create_mirror_registry" {
+  description = "When true, deploy mirror registry EC2 in Nest for disconnected OCP install. Run oc-mirror from bastion to populate."
+  type        = bool
+  default     = false
+}
+
+variable "mirror_registry_instance_type" {
+  description = "EC2 instance type for mirror registry host"
+  type        = string
+  default     = "t3.medium"
 }

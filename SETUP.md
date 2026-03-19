@@ -14,7 +14,7 @@ This guide covers AWS credential configuration and optional custom endpoint setu
 export AWS_ACCESS_KEY_ID="your-access-key-id"
 export AWS_SECRET_ACCESS_KEY="your-secret-access-key"
 export AWS_SESSION_TOKEN="your-session-token"   # Optional, for temporary credentials
-export AWS_REGION="us-east-1"                    # Or set via terraform.tfvars
+export AWS_REGION="us-east-2"                    # Or set via terraform.tfvars
 ```
 
 Then run Terraform:
@@ -33,7 +33,7 @@ Configure the AWS CLI:
 aws configure
 # AWS Access Key ID: your-access-key-id
 # AWS Secret Access Key: your-secret-access-key
-# Default region name: us-east-1
+# Default region name: us-east-2
 ```
 
 Terraform uses the same credential chain automatically.
@@ -43,7 +43,7 @@ Terraform uses the same credential chain automatically.
 For non-sensitive values like region, you can use:
 
 ```bash
-export TF_VAR_aws_region="us-east-1"
+export TF_VAR_aws_region="us-east-2"
 export TF_VAR_environment="sandbox"
 # ... other TF_VAR_* as needed
 ```
@@ -62,7 +62,7 @@ export TF_VAR_environment="sandbox"
 
 2. Edit `terraform.tfvars` with your environment values:
 
-   - `aws_region` – Target AWS region (e.g., `us-east-1`, `us-gov-west-1`)
+   - `aws_region` – Target AWS region (e.g., `us-east-2`, `us-gov-west-1`)
    - `availability_zones` – AZs for your region
    - `nest_vpc_cidr` / `vault_vpc_cidr` – Ensure no overlap with existing networks
    - `nest_public_subnet_cidrs` / `vault_private_subnet_cidrs` – One CIDR per AZ
