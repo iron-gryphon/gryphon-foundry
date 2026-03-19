@@ -19,6 +19,11 @@ output "nest_public_subnet_ids" {
   value       = module.vpc.nest_public_subnet_ids
 }
 
+output "nest_vpc_cidr" {
+  description = "CIDR block of the Nest VPC (for gryphon-forge bootstrap SG - bastion reaches OCP API from Nest via peering)"
+  value       = module.vpc.nest_vpc_cidr
+}
+
 output "vault_vpc_id" {
   description = "ID of the Vault (isolated) VPC"
   value       = module.vpc.vault_vpc_id
