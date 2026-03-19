@@ -164,7 +164,7 @@ variable "bastion_oc_cli_version" {
 variable "create_mirror_registry" {
   description = "When true, deploy mirror registry EC2 in Nest for disconnected OCP install. Run oc-mirror from bastion to populate."
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "mirror_registry_instance_type" {

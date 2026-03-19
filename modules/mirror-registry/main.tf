@@ -118,7 +118,7 @@ EOT
 # Route53: mirror.<base_domain> -> registry private IP (when zone provided)
 # -----------------------------------------------------------------------------
 resource "aws_route53_record" "mirror_registry" {
-  count = var.hosted_zone_id != "" ? 1 : 0
+  count = var.create_route53_record ? 1 : 0
 
   zone_id = var.hosted_zone_id
   name    = "mirror.${var.base_domain}"
