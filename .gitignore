@@ -38,3 +38,4 @@ terraform.rc
 bastion-key.pem
 forge.plan
 foundry-outputs.json
+foundry_output.json

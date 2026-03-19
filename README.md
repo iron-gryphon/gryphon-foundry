@@ -30,6 +30,7 @@ The foundry provisions a dual-VPC architecture to simulate a true "Sneakernet" w
 │   ├── security/           # IAM, KMS, and Security Group configurations
 │   ├── sneakernet/         # Automation for EBS/S3 data transfer
 │   ├── ocp-upi/            # Ignition-based OCP deployment logic
+│   ├── rhcos-ami/          # Import RHCOS from mirror (disconnected AWS)
 │   └── bastion/            # Internet-accessible jump host with OCP CLI
 ├── main.tf                 # Root-level config for sandbox
 ├── variables.tf
@@ -157,7 +158,7 @@ From the **gryphon-foundry** directory (after `terraform apply`), export outputs
 
 ```bash
 cd gryphon-foundry
-terraform output -json > foundry-outputs.json
+terraform output -json > foundry_output.json
 ```
 
 **Option B: Individual outputs (for manual use or CI)**
@@ -172,6 +173,10 @@ terraform output -raw ocp_base_domain         # e.g. sandbox3704.opentlc.com (em
 
 # Bastion (for SSH jump host, oc login)
 terraform output -raw bastion_hostname        # or bastion_public_ip if no Route53
+
+# RHCOS AMI (when account cannot use Red Hat AMIs)
+terraform output -raw rhcos_ami_id            # Pass to gryphon-forge as rhcos_ami_id
+terraform output -raw bastion_security_group_id  # SG for bootstrap API/MCS rules (gryphon-forge)
 ```
 
 **Option C: Environment variables (for Ansible extra vars or shell)**
@@ -183,6 +188,7 @@ export FOUNDRY_VAULT_SG=$(terraform output -raw vault_security_group_id)
 export FOUNDRY_CLUSTER_NAME=$(terraform output -raw ocp_cluster_name)
 export FOUNDRY_BASE_DOMAIN=$(terraform output -raw ocp_base_domain)
 export FOUNDRY_BASTION=$(terraform output -raw bastion_hostname)
+export FOUNDRY_BASTION_SG=$(terraform output -raw bastion_security_group_id)
 ```
 
 ### Foundry Outputs Reference (UPI-relevant)
@@ -193,9 +199,20 @@ export FOUNDRY_BASTION=$(terraform output -raw bastion_hostname)
 | `vault_api_security_group_id` | Security group for API server (6443) and ingress (443) |
 | `vault_security_group_id` | Security group for node-to-node traffic |
 | `ocp_cluster_name` | Cluster name (used in `api.<cluster>.<domain>`) |
-| `ocp_base_domain` | Base domain for DNS (Route53 zone); empty if not set |
+| `ocp_base_domain` | Base domain for OCP DNS (api, api-int, *.apps). When set to internal domain (e.g. fsi.internal), foundry creates a private hosted zone. Must match gryphon-forge base_domain. |
 | `bastion_hostname` | Bastion FQDN for SSH (when Route53 is configured) |
 | `bastion_public_ip` | Bastion IP (fallback when no Route53) |
+| `bastion_security_group_id` | Bastion SG ID (for gryphon-forge bootstrap SG rules allowing API/MCS from bastion) |
+| `internal_hosted_zone_id` | Route53 hosted zone ID for OCP DNS (api, api-int, *.apps) |
+| `ingress_certificate_arn` | ACM certificate ARN for ingress (*.apps) when `create_ingress_certificate = true` |
+
+### ACM Certificate for Ingress (Optional)
+
+When `create_ingress_certificate = true` in `terraform.tfvars`, the foundry creates an ACM certificate for `*.apps.<cluster>.<domain>`. gryphon-forge then uses an **ALB with HTTPS** instead of an NLB for ingress.
+
+**Public ACM** (for sandbox/public zones): Set `use_ingress_private_ca = false`. Requires `route53_hosted_zone_name`. Certificate is validated via DNS.
+
+**Private CA** (for internal domains like `fsi.internal`): Set `use_ingress_private_ca = true` and `ocp_ingress_base_domain = "fsi.internal"`. Creates an ACM Private CA and issues a private certificate—no DNS validation needed.
 
 The UPI project should use the bastion as the jump host for deployment and `oc login` after the cluster is ready.
 
