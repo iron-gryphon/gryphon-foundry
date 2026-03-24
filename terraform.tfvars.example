@@ -17,12 +17,12 @@ environment = "sandbox"
 # -----------------------------------------------------------------------------
 # AWS Region & Availability Zones
 # -----------------------------------------------------------------------------
-aws_region = "us-east-1"
+aws_region = "us-east-2"
 
 availability_zones = [
-  "us-east-1a",
-  "us-east-1b",
-  "us-east-1c"
+  "us-east-2a",
+  "us-east-2b",
+  "us-east-2c"
 ]
 
 # -----------------------------------------------------------------------------
@@ -63,9 +63,30 @@ tags = {
 route53_hosted_zone_name = "your-sandbox-hosted-zone.example.com"
 
 # -----------------------------------------------------------------------------
+# OCP Base Domain (must match gryphon-forge base_domain)
+# -----------------------------------------------------------------------------
+# When using internal domain (e.g. fsi.internal), set this. Foundry creates a private
+# hosted zone for it. When empty, OCP uses route53_hosted_zone_name (sandbox zone).
+# ocp_base_domain = "fsi.internal"
+
+# -----------------------------------------------------------------------------
 # Optional: OCP cluster name (used for API URL; cluster sizing is in the UPI project)
 # -----------------------------------------------------------------------------
 ocp_cluster_name = "gryphon-ocp"
+
+# -----------------------------------------------------------------------------
+# Optional: ACM certificate for OpenShift ingress (*.apps.<cluster>.<domain>)
+# -----------------------------------------------------------------------------
+# When true, creates ACM cert; gryphon-forge uses ALB with HTTPS instead of NLB.
+# create_ingress_certificate = true
+
+# For internal domains (e.g. fsi.internal), use Private CA:
+# use_ingress_private_ca = true
+# ocp_ingress_base_domain = "fsi.internal"
+
+# For public Route53 zones (e.g. sandbox), use public ACM with DNS validation:
+# use_ingress_private_ca = false
+# (route53_hosted_zone_name must be set)
 
 # -----------------------------------------------------------------------------
 # Bastion Host (required - create key pair first: aws ec2 create-key-pair --key-name <name>)
