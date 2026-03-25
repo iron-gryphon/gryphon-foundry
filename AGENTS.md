@@ -39,6 +39,13 @@ Or run these steps manually:
 
 If `terraform plan` fails due to missing credentials or variables, at minimum run `terraform fmt` and `terraform validate`.
 
+After `terraform apply`, validate the JSON you pass to **gryphon-forge** (requires `jq`):
+
+```bash
+terraform output -json > foundry_output.json
+./scripts/check-foundry-json-for-forge.sh foundry_output.json
+```
+
 ---
 
 ## 📐 Project Conventions
