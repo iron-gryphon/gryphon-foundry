@@ -62,7 +62,7 @@ terraform output -json > foundry_output.json
 ```
 modules/       # vpc, security, sneakernet, ocp-upi
 *.tf           # main.tf, variables.tf, outputs.tf (root-level sandbox config)
-scripts/       # validate.sh, oc-mirror helpers
+scripts/       # validate.sh, check-foundry-json-for-forge.sh, imageset-config.yaml.example (oc-mirror)
 ```
 
 ---

@@ -35,7 +35,7 @@ The foundry provisions a dual-VPC architecture to simulate a true "Sneakernet" w
 ├── main.tf                 # Root-level config for sandbox
 ├── variables.tf
 ├── outputs.tf
-├── scripts/                # Helper tools for oc-mirror and image sync
+├── scripts/                # validate.sh, check-foundry-json-for-forge.sh, imageset-config.yaml.example
 └── README.md
 ```
 
@@ -133,6 +133,22 @@ To reach the OpenShift web console from your laptop over the bastion:
 
 **Alternative:** Use a SOCKS proxy: `ssh -D 1080 -i bastion-key.pem ec2-user@$(terraform output -raw bastion_hostname)`, then configure your browser to use `socks5://127.0.0.1:1080`.
 
+### Disconnected mirror registry (`oc-mirror`)
+
+When `create_mirror_registry = true`, Terraform deploys a Docker-registry-compatible host in the Nest and outputs `mirror_registry_url`, `mirror_registry_additional_trust_bundle`, and (optionally) `mirror_registry_public_ip`. **Populating images is a separate step** before gryphon-forge can install a disconnected cluster.
+
+1. **Example config** — Copy [`scripts/imageset-config.yaml.example`](scripts/imageset-config.yaml.example) to `imageset-config.yaml` and set `channels`, `minVersion`, and `maxVersion` to the OpenShift release you will install (same z-stream as `openshift-install` / gryphon-forge `ocp_version`).
+2. **Install the plugin** — On the bastion (or another connected host that can reach the registry), install the `oc-mirror` OpenShift CLI plugin per Red Hat documentation for your OCP version.
+3. **Mirror** — Push to the path gryphon-forge expects (default repository path `openshift/release` under your mirror host), for example:
+   ```bash
+   oc mirror --config imageset-config.yaml \
+     docker://$(terraform output -raw mirror_registry_url)/openshift/release
+   ```
+   Use your Red Hat pull secret (`oc registry login --registry registry.redhat.io` or a merged `config.json`). If TLS to the registry uses the Foundry-generated CA, configure trust per Red Hat’s disconnected-install docs.
+4. **gryphon-forge** — Pass `terraform output -json > foundry_output.json` so Forge picks up `mirror_registry_url` and `mirror_registry_additional_trust_bundle`. Set `openshift_install_release_image_override` to the **mirrored release image reference** (digest) from the `oc-mirror` output; see gryphon-forge `inventory/group_vars/all.yml`.
+
+`oc-mirror` v2 may use different flags or config layout; always verify against [Red Hat disconnected environments](https://docs.redhat.com/en/documentation/openshift_container_platform/) for your release.
+
 ---
 
 ## 🔧 UPI Project: Expectations and Consuming Foundry Outputs
@@ -205,6 +221,9 @@ export FOUNDRY_BASTION_SG=$(terraform output -raw bastion_security_group_id)
 | `bastion_security_group_id` | Bastion SG ID (for gryphon-forge bootstrap SG rules allowing API/MCS from bastion) |
 | `internal_hosted_zone_id` | Route53 hosted zone ID for OCP DNS (api, api-int, *.apps) |
 | `ingress_certificate_arn` | ACM certificate ARN for ingress (*.apps) when `create_ingress_certificate = true` |
+| `mirror_registry_url` | (when `create_mirror_registry`) DNS name for gryphon-forge `imageContentSources` |
+| `mirror_registry_additional_trust_bundle` | (when mirror enabled) PEM CA for Forge `install-config` `additionalTrustBundle` |
+| `mirror_registry_public_ip` | (when mirror enabled) Public IP if you push from outside the VPC |
 
 ### ACM Certificate for Ingress (Optional)
 
