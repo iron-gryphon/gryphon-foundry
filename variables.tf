@@ -172,3 +172,9 @@ variable "mirror_registry_instance_type" {
   type        = string
   default     = "t3.medium"
 }
+
+variable "mirror_registry_tls_extra_san_dns_names" {
+  description = "Extra DNS SANs on the mirror registry TLS certificate (mirror.<base_domain> is always included). Use for aliases."
+  type        = list(string)
+  default     = []
+}

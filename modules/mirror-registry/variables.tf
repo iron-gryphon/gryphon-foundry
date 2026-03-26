@@ -56,6 +56,12 @@ variable "instance_type" {
   default     = "t3.medium"
 }
 
+variable "mirror_registry_tls_extra_san_dns_names" {
+  description = "Extra DNS names for the registry TLS certificate SAN extension. mirror.<base_domain> is always included."
+  type        = list(string)
+  default     = []
+}
+
 variable "ssh_allowed_cidrs" {
   description = "CIDR blocks allowed to SSH to registry host"
   type        = list(string)

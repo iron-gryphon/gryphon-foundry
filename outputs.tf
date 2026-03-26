@@ -139,6 +139,11 @@ output "mirror_registry_public_ip" {
   value       = var.create_mirror_registry && local.ocp_base_domain_effective != "" ? module.mirror_registry[0].mirror_registry_public_ip : null
 }
 
+output "mirror_registry_additional_trust_bundle" {
+  description = "PEM CA for the mirror registry TLS cert (install-config additionalTrustBundle). Set automatically from Terraform when create_mirror_registry is true."
+  value       = var.create_mirror_registry && local.ocp_base_domain_effective != "" ? module.mirror_registry[0].mirror_registry_additional_trust_bundle : null
+}
+
 # -----------------------------------------------------------------------------
 # ACM Outputs (consumed by gryphon-forge for ALB HTTPS)
 # -----------------------------------------------------------------------------
