@@ -1,0 +1,41 @@
+# Example ImageSetConfiguration for oc-mirror plugin v2 (OpenShift Container Platform 4.20).
+# Source: Red Hat "Mirroring images for a disconnected installation using the oc-mirror plugin v2"
+#   https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/disconnected_environments/about-installing-oc-mirror-v2
+#
+# Copy to imageset-config.yaml and adjust minVersion/maxVersion to the z-stream you will install
+# (see terraform.tfvars ocp_version and release notes). Set both to the same version to pin.
+#
+# Align the mirror destination path with gryphon-forge:
+#   mirror_registry_release_path defaults to "openshift/release"
+#
+# Mirror to registry (partially disconnected; requires --v2 and a workspace directory for outputs):
+#   oc mirror -c imageset-config.yaml --workspace file://<local_workspace> \
+#     docker://mirror.<your-base-domain>/openshift/release --v2
+#
+# Use a pull secret JSON that includes registry.redhat.io + quay.io (and mirror creds if any).
+# Generated cluster resources live under <workspace>/cluster-resources (IDMS, ITMS, CatalogSource, etc.).
+# After mirroring, record the release image digest from oc-mirror output and set
+# openshift_install_release_image_override in gryphon-forge. See gryphon-forge inventory/group_vars/all.yml.
+#
+# v2 notes: additionalImages entries must use explicit registry hostnames. Remove the operators.packages
+# list (or the whole operators block) if you need only the platform release or all catalog packages.
+
+kind: ImageSetConfiguration
+apiVersion: mirror.openshift.io/v2alpha1
+archiveSize: 4
+mirror:
+  platform:
+    channels:
+      - name: stable-4.20
+        minVersion: 4.20.2
+        maxVersion: 4.20.2
+    graph: true
+  operators:
+    - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.20
+      packages:
+        - name: aws-load-balancer-operator
+        - name: 3scale-operator
+        - name: node-observability-operator
+  additionalImages:
+    - name: registry.redhat.io/ubi8/ubi:latest
+    - name: registry.redhat.io/ubi9/ubi@sha256:20f695d2a91352d4eaa25107535126727b5945bff38ed36a3e59590f495046f0

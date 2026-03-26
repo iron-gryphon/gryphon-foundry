@@ -95,3 +95,11 @@ bastion_key_name = "your-bastion-key-name"
 
 # Optional: Restrict SSH to specific IPs for security
 # bastion_ssh_allowed_cidrs = ["1.2.3.4/32"]
+
+# -----------------------------------------------------------------------------
+# Mirror registry (disconnected OCP — Nest VPC)
+# -----------------------------------------------------------------------------
+# When true (default), provisions mirror.<ocp_base_domain> with TLS (SAN) and outputs
+# mirror_registry_url + mirror_registry_additional_trust_bundle for gryphon-forge.
+# create_mirror_registry = false
+# mirror_registry_tls_extra_san_dns_names = ["registry.example.internal"]

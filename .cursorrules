@@ -33,7 +33,7 @@ Or manually:
 
 - modules/: vpc, security, sneakernet, ocp-upi
 - Root-level: main.tf, variables.tf, outputs.tf (single sandbox environment)
-- scripts/: validate.sh, oc-mirror helpers
+- scripts/: validate.sh, check-foundry-json-for-forge.sh, imageset-config.yaml.example (oc-mirror)
 
 ## Commits
 

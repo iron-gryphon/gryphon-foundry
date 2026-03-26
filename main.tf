@@ -178,16 +178,17 @@ module "mirror_registry" {
 
   source = "./modules/mirror-registry"
 
-  environment            = var.environment
-  nest_vpc_id            = module.vpc.nest_vpc_id
-  nest_public_subnet_ids = module.vpc.nest_public_subnet_ids
-  nest_vpc_cidr          = module.vpc.nest_vpc_cidr
-  vault_vpc_cidr         = module.vpc.vault_vpc_cidr
-  key_name               = var.bastion_key_name
-  base_domain            = local.ocp_base_domain_effective
-  instance_type          = var.mirror_registry_instance_type
-  ssh_allowed_cidrs      = var.bastion_ssh_allowed_cidrs
-  hosted_zone_id         = local.create_ocp_private_zone ? aws_route53_zone.ocp_internal[0].zone_id : ""
-  create_route53_record  = local.create_ocp_private_zone
-  tags                   = var.tags
+  environment                             = var.environment
+  nest_vpc_id                             = module.vpc.nest_vpc_id
+  nest_public_subnet_ids                  = module.vpc.nest_public_subnet_ids
+  nest_vpc_cidr                           = module.vpc.nest_vpc_cidr
+  vault_vpc_cidr                          = module.vpc.vault_vpc_cidr
+  key_name                                = var.bastion_key_name
+  base_domain                             = local.ocp_base_domain_effective
+  instance_type                           = var.mirror_registry_instance_type
+  mirror_registry_tls_extra_san_dns_names = var.mirror_registry_tls_extra_san_dns_names
+  ssh_allowed_cidrs                       = var.bastion_ssh_allowed_cidrs
+  hosted_zone_id                          = local.create_ocp_private_zone ? aws_route53_zone.ocp_internal[0].zone_id : ""
+  create_route53_record                   = local.create_ocp_private_zone
+  tags                                    = var.tags
 }
