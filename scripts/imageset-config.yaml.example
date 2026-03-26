@@ -13,6 +13,8 @@
 #     docker://mirror.<your-base-domain>/openshift/release --v2
 #
 # Use a pull secret JSON that includes registry.redhat.io + quay.io (and mirror creds if any).
+# On the bastion, copy it to the path in Terraform variable oc_mirror_pull_secret_path (default
+# ~/.openshift/pull-secret); gryphon_oc_mirror() sources GRYPHON_OCP_PULL_SECRET from profile.d.
 # Generated cluster resources live under <workspace>/cluster-resources (IDMS, ITMS, CatalogSource, etc.).
 # After mirroring, record the release image digest from oc-mirror output and set
 # openshift_install_release_image_override in gryphon-forge. See gryphon-forge inventory/group_vars/all.yml.

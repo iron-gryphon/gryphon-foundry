@@ -19,6 +19,9 @@ data "aws_region" "current" {}
 
 # Effective OCP base domain: ocp_base_domain when set, else route53_hosted_zone_name
 locals {
+  # OpenShift client + oc-mirror tarball channel (mirror.openshift.com/clients/ocp/<channel>/...)
+  bastion_oc_release = var.bastion_oc_cli_version != "" ? var.bastion_oc_cli_version : "stable-${var.ocp_version}"
+
   ocp_base_domain_effective = coalesce(
     var.ocp_base_domain != "" ? var.ocp_base_domain : null,
     var.route53_hosted_zone_name != "" ? trimsuffix(var.route53_hosted_zone_name, ".") : null,
@@ -158,15 +161,16 @@ module "acm" {
 module "bastion" {
   source = "./modules/bastion"
 
-  environment              = var.environment
-  nest_vpc_id              = module.vpc.nest_vpc_id
-  nest_public_subnet_ids   = module.vpc.nest_public_subnet_ids
-  key_name                 = var.bastion_key_name
-  instance_type            = var.bastion_instance_type
-  ssh_allowed_cidrs        = var.bastion_ssh_allowed_cidrs
-  oc_cli_version           = var.bastion_oc_cli_version
-  route53_hosted_zone_name = var.route53_hosted_zone_name
-  tags                     = var.tags
+  environment                = var.environment
+  nest_vpc_id                = module.vpc.nest_vpc_id
+  nest_public_subnet_ids     = module.vpc.nest_public_subnet_ids
+  key_name                   = var.bastion_key_name
+  instance_type              = var.bastion_instance_type
+  ssh_allowed_cidrs          = var.bastion_ssh_allowed_cidrs
+  oc_release                 = local.bastion_oc_release
+  oc_mirror_pull_secret_path = var.oc_mirror_pull_secret_path
+  route53_hosted_zone_name   = var.route53_hosted_zone_name
+  tags                       = var.tags
 }
 
 # -----------------------------------------------------------------------------

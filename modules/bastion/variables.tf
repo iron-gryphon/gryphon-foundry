@@ -30,10 +30,14 @@ variable "ssh_allowed_cidrs" {
   default     = ["0.0.0.0/0"]
 }
 
-variable "oc_cli_version" {
-  description = "OpenShift CLI version to install on bastion (e.g. 4.15.0, stable)"
+variable "oc_release" {
+  description = "Release channel for openshift-client and oc-mirror on bastion (e.g. stable-4.20, 4.20.0). Must match ocp_version for mirroring."
   type        = string
-  default     = "stable"
+}
+
+variable "oc_mirror_pull_secret_path" {
+  description = "Path on bastion to pull secret JSON; ~ expands to $HOME in profile.d"
+  type        = string
 }
 
 variable "route53_hosted_zone_name" {

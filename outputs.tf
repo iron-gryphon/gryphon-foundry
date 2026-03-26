@@ -126,6 +126,16 @@ output "bastion_hostname" {
   value       = module.bastion.bastion_hostname
 }
 
+output "oc_mirror_pull_secret_path" {
+  description = "Path on bastion for the Red Hat pull secret (copy JSON here; used by gryphon_oc_mirror and oc mirror --registry-config)"
+  value       = var.oc_mirror_pull_secret_path
+}
+
+output "bastion_oc_release" {
+  description = "OpenShift client and oc-mirror release channel installed on bastion (mirror.openshift.com/clients/ocp/<channel>/...)"
+  value       = local.bastion_oc_release
+}
+
 # -----------------------------------------------------------------------------
 # Mirror Registry Outputs (disconnected OCP)
 # -----------------------------------------------------------------------------

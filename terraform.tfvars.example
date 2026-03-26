@@ -96,6 +96,12 @@ bastion_key_name = "your-bastion-key-name"
 # Optional: Restrict SSH to specific IPs for security
 # bastion_ssh_allowed_cidrs = ["1.2.3.4/32"]
 
+# OpenShift CLI + oc-mirror on bastion use stable-<ocp_version> unless you override:
+# bastion_oc_cli_version = "stable-4.20"
+
+# Where to copy your pull-secret.json on the bastion (default: ~/.openshift/pull-secret)
+# oc_mirror_pull_secret_path = "~/.openshift/pull-secret"
+
 # -----------------------------------------------------------------------------
 # Mirror registry (disconnected OCP — Nest VPC)
 # -----------------------------------------------------------------------------

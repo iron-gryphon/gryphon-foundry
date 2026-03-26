@@ -153,9 +153,15 @@ variable "bastion_ssh_allowed_cidrs" {
 }
 
 variable "bastion_oc_cli_version" {
-  description = "OpenShift CLI version to install on bastion (e.g. 4.15.0, stable)"
+  description = "OpenShift CLI / oc-mirror release channel on bastion (e.g. stable-4.20, 4.20.0, latest-4.20). When empty, uses stable-<ocp_version> so oc and oc-mirror match ocp_version."
   type        = string
-  default     = "stable"
+  default     = ""
+}
+
+variable "oc_mirror_pull_secret_path" {
+  description = "Path on the bastion to the Red Hat pull secret JSON (copy from cloud.redhat.com). Tilde (~) expands to the SSH user's home. Used by /etc/profile.d/gryphon-oc-mirror.sh and gryphon_oc_mirror()."
+  type        = string
+  default     = "~/.openshift/pull-secret"
 }
 
 # -----------------------------------------------------------------------------
