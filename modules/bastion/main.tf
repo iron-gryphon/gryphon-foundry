@@ -84,7 +84,7 @@ cat >/etc/profile.d/gryphon-oc-mirror.sh <<'EOS'
 # gryphon-foundry: pull secret for oc mirror (copy JSON from cloud.redhat.com)
 export GRYPHON_OCP_PULL_SECRET="${local.oc_mirror_pull_secret_shell}"
 gryphon_oc_mirror() {
-  oc mirror --registry-config "$${GRYPHON_OCP_PULL_SECRET}" "$$@"
+  oc mirror --authfile "$${GRYPHON_OCP_PULL_SECRET}" "$$@"
 }
 EOS
 echo "Bastion ready: oc, oc mirror plugin, oc-mirror binary. Configure pull secret at ${local.oc_mirror_pull_secret_shell} then use: gryphon_oc_mirror <args>"

@@ -150,7 +150,7 @@ When `create_mirror_registry = true`, Terraform deploys a Docker-registry-compat
    oc mirror -c imageset-config.yaml --workspace file://$(pwd)/oc-mirror-workspace \
      docker://$(terraform output -raw mirror_registry_url)/openshift/release --v2
    ```
-   Use your Red Hat pull secret (`oc registry login --registry registry.redhat.io` or a merged `config.json`). On the bastion, `gryphon_oc_mirror` wraps `oc mirror` with `--registry-config` pointing at `oc_mirror_pull_secret_path`.
+   Use your Red Hat pull secret (`oc registry login --registry registry.redhat.io` or a merged `config.json`). On the bastion, `gryphon_oc_mirror` wraps `oc mirror` with `--authfile` pointing at `oc_mirror_pull_secret_path` (oc-mirror v2; `--registry-config` is not supported on the v2 path).
 5. **gryphon-forge** — Pass `terraform output -json > foundry_output.json` so Forge picks up `mirror_registry_url` and `mirror_registry_additional_trust_bundle`. Set `openshift_install_release_image_override` to the **mirrored release image reference** (digest) from the `oc-mirror` output; see gryphon-forge `inventory/group_vars/all.yml`.
 
 Applying the bastion change that embeds the mirror CA **replaces** the bastion instance (new `user_data`). Prefer the manual trust commands if you must avoid replacement.

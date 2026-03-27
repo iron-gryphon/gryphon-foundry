@@ -127,7 +127,7 @@ output "bastion_hostname" {
 }
 
 output "oc_mirror_pull_secret_path" {
-  description = "Path on bastion for the Red Hat pull secret (copy JSON here; used by gryphon_oc_mirror and oc mirror --registry-config)"
+  description = "Path on bastion for the Red Hat pull secret (copy JSON here; used by gryphon_oc_mirror and oc mirror --authfile)"
   value       = var.oc_mirror_pull_secret_path
 }
 
