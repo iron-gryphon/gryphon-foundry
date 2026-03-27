@@ -170,7 +170,12 @@ module "bastion" {
   oc_release                 = local.bastion_oc_release
   oc_mirror_pull_secret_path = var.oc_mirror_pull_secret_path
   route53_hosted_zone_name   = var.route53_hosted_zone_name
-  tags                       = var.tags
+  mirror_registry_ca_pem = (
+    var.create_mirror_registry && local.ocp_base_domain_effective != ""
+    ? module.mirror_registry[0].mirror_registry_additional_trust_bundle
+    : ""
+  )
+  tags = var.tags
 }
 
 # -----------------------------------------------------------------------------

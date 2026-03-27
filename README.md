@@ -139,15 +139,23 @@ When `create_mirror_registry = true`, Terraform deploys a Docker-registry-compat
 
 1. **Example config** — Copy [`scripts/imageset-config.yaml.example`](scripts/imageset-config.yaml.example) to `imageset-config.yaml` and set `channels`, `minVersion`, and `maxVersion` to the OpenShift release you will install (same z-stream as `openshift-install` / gryphon-forge `ocp_version`).
 2. **Install the plugin** — On the bastion (or another connected host that can reach the registry), install the `oc-mirror` OpenShift CLI plugin per Red Hat documentation for your OCP version.
-3. **Mirror** — Push to the path gryphon-forge expects (default repository path `openshift/release` under your mirror host), for example:
+3. **Trust the mirror CA** — The registry uses a Terraform-generated offline CA (`mirror_registry_additional_trust_bundle`). **New bastions** install that CA into the system trust store during bootstrap when `create_mirror_registry` is true, so `oc mirror` can verify `https://mirror.<domain>` without `x509: certificate signed by unknown authority`. **Existing bastions** created before that behavior (or if you run `oc mirror` from your laptop) must install the CA once:
    ```bash
-   oc mirror --config imageset-config.yaml \
-     docker://$(terraform output -raw mirror_registry_url)/openshift/release
+   terraform output -raw mirror_registry_additional_trust_bundle | sudo tee /etc/pki/ca-trust/source/anchors/gryphon-mirror-registry-ca.pem
+   sudo update-ca-trust extract
    ```
-   Use your Red Hat pull secret (`oc registry login --registry registry.redhat.io` or a merged `config.json`). If TLS to the registry uses the Foundry-generated CA, configure trust per Red Hat’s disconnected-install docs.
-4. **gryphon-forge** — Pass `terraform output -json > foundry_output.json` so Forge picks up `mirror_registry_url` and `mirror_registry_additional_trust_bundle`. Set `openshift_install_release_image_override` to the **mirrored release image reference** (digest) from the `oc-mirror` output; see gryphon-forge `inventory/group_vars/all.yml`.
+   On macOS, add the PEM to Keychain Access as a trusted root, or run mirroring from the bastion after the steps above.
+4. **Mirror** — Use **oc-mirror v2** for current releases (see [`scripts/imageset-config.yaml.example`](scripts/imageset-config.yaml.example)); v1 is deprecated. Push to the path gryphon-forge expects (default `openshift/release` under your mirror host), for example:
+   ```bash
+   oc mirror -c imageset-config.yaml --workspace file://$(pwd)/oc-mirror-workspace \
+     docker://$(terraform output -raw mirror_registry_url)/openshift/release --v2
+   ```
+   Use your Red Hat pull secret (`oc registry login --registry registry.redhat.io` or a merged `config.json`). On the bastion, `gryphon_oc_mirror` wraps `oc mirror` with `--registry-config` pointing at `oc_mirror_pull_secret_path`.
+5. **gryphon-forge** — Pass `terraform output -json > foundry_output.json` so Forge picks up `mirror_registry_url` and `mirror_registry_additional_trust_bundle`. Set `openshift_install_release_image_override` to the **mirrored release image reference** (digest) from the `oc-mirror` output; see gryphon-forge `inventory/group_vars/all.yml`.
 
-`oc-mirror` v2 may use different flags or config layout; always verify against [Red Hat disconnected environments](https://docs.redhat.com/en/documentation/openshift_container_platform/) for your release.
+Applying the bastion change that embeds the mirror CA **replaces** the bastion instance (new `user_data`). Prefer the manual trust commands if you must avoid replacement.
+
+Always verify flags and `ImageSetConfiguration` against [Red Hat disconnected environments](https://docs.redhat.com/en/documentation/openshift_container_platform/) for your release.
 
 ---
 

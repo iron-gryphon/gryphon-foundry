@@ -46,6 +46,13 @@ variable "route53_hosted_zone_name" {
   default     = ""
 }
 
+variable "mirror_registry_ca_pem" {
+  description = "PEM of the offline CA that signs the Nest mirror registry TLS certificate. When non-empty, installs into system trust so oc mirror can push to docker://mirror.<domain>/... without x509 unknown authority errors."
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
 variable "tags" {
   description = "Tags to apply to all resources"
   type        = map(string)

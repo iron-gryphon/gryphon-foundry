@@ -63,6 +63,15 @@ resource "aws_instance" "bastion" {
   user_data = <<-EOT
 #!/bin/bash
 set -e
+%{if var.mirror_registry_ca_pem != ""}
+# Trust Foundry mirror registry offline CA (required for oc mirror to docker://mirror.<domain>/...)
+mkdir -p /etc/pki/ca-trust/source/anchors
+cat >/etc/pki/ca-trust/source/anchors/gryphon-mirror-registry-ca.pem <<'MIRROR_CA_EOF'
+${chomp(var.mirror_registry_ca_pem)}
+MIRROR_CA_EOF
+chmod 644 /etc/pki/ca-trust/source/anchors/gryphon-mirror-registry-ca.pem
+update-ca-trust extract
+%{endif}
 # OpenShift CLI + oc-mirror (same release channel as ocp_version via stable-<x.y>)
 OCP_RELEASE="${var.oc_release}"
 curl -fsSL "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/$${OCP_RELEASE}/openshift-client-linux.tar.gz" | tar xz -C /usr/local/bin
