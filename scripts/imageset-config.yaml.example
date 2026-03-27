@@ -21,6 +21,13 @@
 #
 # v2 notes: additionalImages entries must use explicit registry hostnames. Remove the operators.packages
 # list (or the whole operators block) if you need only the platform release or all catalog packages.
+#
+# Operators below (pin catalog tag v4.xx to your ocp_version / redhat-operator-index):
+#   openshift-gitops-operator — OpenShift GitOps (includes Argo CD)
+#   serverless-operator — OpenShift Serverless (Knative)
+#   servicemeshoperator3 — OpenShift Service Mesh 3 (verify package name for your OCP z-stream; SM2 used servicemeshoperator)
+#   cert-manager-operator — cert-manager Operator for Red Hat OpenShift (application TLS/certificate lifecycle; not the community Jetstack bundle)
+#     Docs: https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/security_and_compliance/cert-manager-operator-for-red-hat-openshift
 
 kind: ImageSetConfiguration
 apiVersion: mirror.openshift.io/v2alpha1
@@ -35,9 +42,10 @@ mirror:
   operators:
     - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.20
       packages:
-        - name: aws-load-balancer-operator
-        - name: 3scale-operator
-        - name: node-observability-operator
+        - name: openshift-gitops-operator
+        - name: serverless-operator
+        - name: servicemeshoperator3
+        - name: cert-manager-operator
   additionalImages:
     - name: registry.redhat.io/ubi8/ubi:latest
     - name: registry.redhat.io/ubi9/ubi@sha256:20f695d2a91352d4eaa25107535126727b5945bff38ed36a3e59590f495046f0
