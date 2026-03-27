@@ -108,4 +108,5 @@ bastion_key_name = "your-bastion-key-name"
 # When true (default), provisions mirror.<ocp_base_domain> with TLS (SAN) and outputs
 # mirror_registry_url + mirror_registry_additional_trust_bundle for gryphon-forge.
 # create_mirror_registry = false
+# mirror_registry_root_volume_gb = 500
 # mirror_registry_tls_extra_san_dns_names = ["registry.example.internal"]

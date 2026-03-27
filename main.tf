@@ -195,6 +195,7 @@ module "mirror_registry" {
   key_name                                = var.bastion_key_name
   base_domain                             = local.ocp_base_domain_effective
   instance_type                           = var.mirror_registry_instance_type
+  root_volume_gb                          = var.mirror_registry_root_volume_gb
   mirror_registry_tls_extra_san_dns_names = var.mirror_registry_tls_extra_san_dns_names
   ssh_allowed_cidrs                       = var.bastion_ssh_allowed_cidrs
   hosted_zone_id                          = local.create_ocp_private_zone ? aws_route53_zone.ocp_internal[0].zone_id : ""

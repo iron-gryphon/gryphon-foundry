@@ -28,6 +28,37 @@
 #   servicemeshoperator3 — OpenShift Service Mesh 3 (verify package name for your OCP z-stream; SM2 used servicemeshoperator)
 #   cert-manager-operator — cert-manager Operator for Red Hat OpenShift (application TLS/certificate lifecycle; not the community Jetstack bundle)
 #     Docs: https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/security_and_compliance/cert-manager-operator-for-red-hat-openshift
+#
+# --- Catalog / index alignment (OCP 4.20) ---
+# Red Hat publishes versioned operator catalog images; the tag must match your cluster minor (here v4.20):
+#   registry.redhat.io/redhat/redhat-operator-index:v4.20
+# Other standard catalogs for the same minor (list may change; confirm with commands below):
+#   registry.redhat.io/redhat/certified-operator-index:v4.20
+#   registry.redhat.io/redhat/community-operator-index:v4.20
+#   registry.redhat.io/redhat/redhat-marketplace-index:v4.20
+# Doc: "About installing the oc-mirror plugin v2" (OCP 4.20 Disconnected environments)
+#   https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/disconnected_environments/about-installing-oc-mirror-v2
+#
+# --- Bastion: confirm catalog images and package names (requires pull secret with registry.redhat.io) ---
+# List catalog image references recommended for your OpenShift version:
+#   oc mirror list operators --catalogs --version=4.20
+# List all packages in the Red Hat Operators catalog (matches this file's catalog: line):
+#   oc mirror list operators --catalog registry.redhat.io/redhat/redhat-operator-index:v4.20
+# Narrow to one package and see channels / update paths (replace PACKAGE):
+#   oc mirror list operators --catalog registry.redhat.io/redhat/redhat-operator-index:v4.20 --package PACKAGE
+# Examples: openshift-gitops-operator, serverless-operator, servicemeshoperator3, cert-manager-operator
+#
+# --- Troubleshooting failed mirrors ---
+# If errors show "received unexpected HTTP status: 500" while pushing to your mirror registry
+# (paths like /v2/<path>/blobs/uploads/ on mirror.<domain>), the failure is usually on the
+# private registry (storage, quotas, reverse proxy timeouts, or Quay/Harbor configuration), not
+# because the ImageSet YAML named the wrong operator package. The same 500 on unrelated images
+# (e.g. redhat-operator-index, ubi8/ubi) confirms a destination-side problem—check registry logs,
+# disk, and upload limits; retry after fixing the mirror.
+#
+# Operator selection: listing packages by name only mirrors the head bundle per channel for each
+# package (see doc section "How filtering works in the operator catalog"). To reduce versions
+# mirrored, add per-package keys such as channels, minVersion, or maxVersion under packages:.
 
 kind: ImageSetConfiguration
 apiVersion: mirror.openshift.io/v2alpha1

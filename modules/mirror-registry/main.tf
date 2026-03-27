@@ -133,6 +133,13 @@ resource "aws_instance" "mirror_registry" {
   vpc_security_group_ids      = [aws_security_group.mirror_registry.id]
   associate_public_ip_address = true
 
+  root_block_device {
+    volume_type           = "gp3"
+    volume_size           = var.root_volume_gb
+    encrypted             = true
+    delete_on_termination = true
+  }
+
   user_data = <<-EOT
 #!/bin/bash
 set -euxo pipefail

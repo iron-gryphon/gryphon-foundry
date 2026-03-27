@@ -179,6 +179,12 @@ variable "mirror_registry_instance_type" {
   default     = "t3.medium"
 }
 
+variable "mirror_registry_root_volume_gb" {
+  description = "Mirror registry EC2 root EBS volume size (GiB, gp3). Holds /opt/registry/data; use 500+ for full OCP + operators + graph mirroring."
+  type        = number
+  default     = 500
+}
+
 variable "mirror_registry_tls_extra_san_dns_names" {
   description = "Extra DNS SANs on the mirror registry TLS certificate (mirror.<base_domain> is always included). Use for aliases."
   type        = list(string)
