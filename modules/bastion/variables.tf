@@ -24,6 +24,12 @@ variable "instance_type" {
   default     = "t3.micro"
 }
 
+variable "root_volume_gb" {
+  description = "Size of the root EBS volume (gp3) in GiB. Default ~20 GiB beyond typical AMI default for oc-mirror workspace, pull secret, and CLI tooling under /home/ec2-user."
+  type        = number
+  default     = 28
+}
+
 variable "ssh_allowed_cidrs" {
   description = "CIDR blocks allowed to SSH to bastion (e.g. [\"1.2.3.4/32\"] or [\"0.0.0.0/0\"] for any)"
   type        = list(string)

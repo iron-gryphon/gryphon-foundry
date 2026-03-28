@@ -146,6 +146,12 @@ variable "bastion_instance_type" {
   default     = "t3.micro"
 }
 
+variable "bastion_root_volume_gb" {
+  description = "Bastion root EBS volume size (GiB, gp3). Default adds ~20 GiB beyond typical AMI size for oc-mirror workspace and persistence under ec2-user home."
+  type        = number
+  default     = 28
+}
+
 variable "bastion_ssh_allowed_cidrs" {
   description = "CIDR blocks allowed to SSH to bastion. Restrict to VPN or office IP for security."
   type        = list(string)

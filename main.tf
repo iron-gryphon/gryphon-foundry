@@ -166,6 +166,7 @@ module "bastion" {
   nest_public_subnet_ids     = module.vpc.nest_public_subnet_ids
   key_name                   = var.bastion_key_name
   instance_type              = var.bastion_instance_type
+  root_volume_gb             = var.bastion_root_volume_gb
   ssh_allowed_cidrs          = var.bastion_ssh_allowed_cidrs
   oc_release                 = local.bastion_oc_release
   oc_mirror_pull_secret_path = var.oc_mirror_pull_secret_path
