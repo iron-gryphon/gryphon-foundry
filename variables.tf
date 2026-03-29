@@ -63,6 +63,12 @@ variable "kms_deletion_window_days" {
   default     = 7
 }
 
+variable "create_vault_aws_interface_endpoints" {
+  description = "Create interface VPC endpoints in the Vault (IAM, STS, EC2, ELB, KMS, autoscaling, Route53) so OCP can use AWS APIs without NAT/IGW. Strongly recommended for air-gapped Vault + default CCO mint mode."
+  type        = bool
+  default     = true
+}
+
 # -----------------------------------------------------------------------------
 # OCP UPI (Optional)
 # -----------------------------------------------------------------------------

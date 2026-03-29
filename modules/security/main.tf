@@ -147,3 +147,34 @@ resource "aws_security_group" "vault_api" {
     Name = "${var.environment}-vault-api-sg"
   })
 }
+
+# -----------------------------------------------------------------------------
+# Security Group: Interface VPC endpoints (IAM, STS, EC2, ELB, …) in Vault
+# ENIs for these endpoints receive traffic from OCP nodes on 443; destinations
+# stay inside the VPC CIDR (no IGW/NAT required).
+# -----------------------------------------------------------------------------
+resource "aws_security_group" "vault_interface_endpoints" {
+  name        = "${var.environment}-vault-interface-endpoints-sg"
+  description = "HTTPS from Vault VPC to AWS API interface VPC endpoints (air-gapped OCP)"
+  vpc_id      = var.vault_vpc_id
+
+  ingress {
+    description = "HTTPS from Vault VPC workloads to AWS API endpoints"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = [var.vault_vpc_cidr]
+  }
+
+  egress {
+    description = "Allow return traffic (required for endpoint ENIs)"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = merge(var.tags, {
+    Name = "${var.environment}-vault-interface-endpoints-sg"
+  })
+}

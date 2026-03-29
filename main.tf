@@ -97,13 +97,16 @@ module "security" {
 module "sneakernet" {
   source = "./modules/sneakernet"
 
-  environment            = var.environment
-  aws_region             = data.aws_region.current.region
-  aws_account_id         = data.aws_caller_identity.current.account_id
-  vault_vpc_id           = module.vpc.vault_vpc_id
-  vault_route_table_ids  = [module.vpc.vault_route_table_id]
-  sneakernet_kms_key_arn = module.security.sneakernet_kms_key_arn
-  tags                   = var.tags
+  environment                                 = var.environment
+  aws_region                                  = data.aws_region.current.region
+  aws_account_id                              = data.aws_caller_identity.current.account_id
+  vault_vpc_id                                = module.vpc.vault_vpc_id
+  vault_route_table_ids                       = [module.vpc.vault_route_table_id]
+  vault_private_subnet_ids                    = module.vpc.vault_private_subnet_ids
+  vault_interface_endpoints_security_group_id = module.security.vault_interface_endpoints_security_group_id
+  create_vault_aws_interface_endpoints        = var.create_vault_aws_interface_endpoints
+  sneakernet_kms_key_arn                      = module.security.sneakernet_kms_key_arn
+  tags                                        = var.tags
 }
 
 # -----------------------------------------------------------------------------

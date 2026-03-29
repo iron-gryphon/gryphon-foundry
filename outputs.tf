@@ -70,6 +70,11 @@ output "vault_receiving_bucket_name" {
   value       = module.sneakernet.vault_receiving_bucket_name
 }
 
+output "vault_aws_interface_endpoint_ids" {
+  description = "AWS interface VPC endpoint IDs in Vault (iam, sts, ec2, elasticloadbalancing, kms, autoscaling, route53)"
+  value       = module.sneakernet.vault_aws_interface_endpoint_ids
+}
+
 # -----------------------------------------------------------------------------
 # OCP UPI Outputs (consumed by the UPI project)
 # -----------------------------------------------------------------------------

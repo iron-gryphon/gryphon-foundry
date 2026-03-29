@@ -2,6 +2,21 @@
 # Manages staging buckets and VPC endpoints for manual/automated data movement
 # between Nest (connected) and Vault (isolated)
 
+locals {
+  # Interface endpoints: regional AWS APIs reachable privately inside the Vault VPC.
+  # Aligns with OpenShift on AWS in restricted / no-internet-VPC scenarios (CCO, machine API, ingress ELB, KMS, Route53).
+  # S3 uses a separate gateway endpoint below.
+  vault_aws_interface_service_names = [
+    "iam",
+    "sts",
+    "ec2",
+    "elasticloadbalancing",
+    "kms",
+    "autoscaling",
+    "route53",
+  ]
+}
+
 # -----------------------------------------------------------------------------
 # S3 Bucket: Nest Staging (oc-mirror output, datasets)
 # -----------------------------------------------------------------------------
@@ -96,6 +111,25 @@ resource "aws_vpc_endpoint" "vault_s3" {
 
   tags = merge(var.tags, {
     Name = "${var.environment}-vault-s3-endpoint"
+  })
+}
+
+# -----------------------------------------------------------------------------
+# Interface VPC endpoints: AWS APIs without public internet (air-gapped Vault)
+# Private DNS: iam.amazonaws.com, sts.*.amazonaws.com, etc. resolve to these ENIs.
+# -----------------------------------------------------------------------------
+resource "aws_vpc_endpoint" "vault_aws_interface" {
+  for_each = var.create_vault_aws_interface_endpoints ? toset(local.vault_aws_interface_service_names) : toset([])
+
+  vpc_id              = var.vault_vpc_id
+  service_name        = "com.amazonaws.${var.aws_region}.${each.key}"
+  vpc_endpoint_type   = "Interface"
+  subnet_ids          = var.vault_private_subnet_ids
+  security_group_ids  = [var.vault_interface_endpoints_security_group_id]
+  private_dns_enabled = true
+
+  tags = merge(var.tags, {
+    Name = "${var.environment}-vault-endpoint-${each.key}"
   })
 }
 
