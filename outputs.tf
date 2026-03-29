@@ -89,12 +89,25 @@ output "ocp_cluster_name" {
 }
 
 output "ocp_base_domain" {
-  description = "Base domain for OCP DNS (Route53 hosted zone). Empty if not configured. Pass to gryphon-forge as base_domain."
+  description = "Effective base domain for OCP (api.<cluster>.<domain>, etc.). Pass to gryphon-forge as base_domain. gryphon-forge creates api, api-int, and *.apps records in this zone after API/ingress load balancers exist; the zone can be associated with Nest and Vault before those records exist."
   value       = local.ocp_base_domain_effective
 }
 
+# Makes DNS mode obvious in terraform output -json / foundry_output.json for gryphon-forge operators.
+output "create_ocp_private_zone" {
+  description = "True when foundry created aws_route53_zone.ocp_internal (private zone for ocp_base_domain differing from route53_hosted_zone_name, or internal-only domain). False when using an existing public/sandbox zone or when no OCP DNS is configured."
+  value       = local.create_ocp_private_zone
+}
+
+output "ocp_route53_zone_source" {
+  description = "How the OCP DNS zone is provided: foundry_private (new private zone in this account), existing_route53 (data source for route53_hosted_zone_name), or unset (no zone ID in outputs)."
+  value = local.create_ocp_private_zone ? "foundry_private" : (
+    var.route53_hosted_zone_name != "" ? "existing_route53" : "unset"
+  )
+}
+
 output "internal_hosted_zone_id" {
-  description = "Route53 hosted zone ID for OCP DNS records (api, api-int, *.apps). Pass to gryphon-forge as foundry_internal_hosted_zone_id."
+  description = "Route53 hosted zone ID where gryphon-forge should create api.<cluster>, api-int.<cluster>, and *.apps aliases (after NLBs exist). Associated with Nest and Vault when create_ocp_private_zone is true. Pass to gryphon-forge as foundry_internal_hosted_zone_id."
   value       = local.create_ocp_private_zone ? aws_route53_zone.ocp_internal[0].zone_id : (var.route53_hosted_zone_name != "" ? data.aws_route53_zone.ocp[0].id : null)
 }
 

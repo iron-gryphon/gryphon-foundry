@@ -127,13 +127,13 @@ variable "rhcos_mirror_base" {
 # Route53 (Optional - for sandbox hosted zone from Red Hat Demo Platform)
 # -----------------------------------------------------------------------------
 variable "route53_hosted_zone_name" {
-  description = "Route53 hosted zone name (e.g. sandbox.example.com) from the sandbox environment. When set, creates bastion.<zone> A record. Used for OCP DNS when ocp_base_domain is empty. Leave empty to skip."
+  description = "Route53 hosted zone name (e.g. sandbox.example.com). When set, creates bastion.<zone> A record. Used as the OCP DNS zone when ocp_base_domain is empty or when ocp_base_domain matches this zone name (same normalized FQDN). Leave empty to skip."
   type        = string
   default     = ""
 }
 
 variable "ocp_base_domain" {
-  description = "Base domain for OCP DNS (api, api-int, *.apps). When set and different from route53_hosted_zone_name (e.g. fsi.internal), foundry creates a private hosted zone for it. When empty, uses route53_hosted_zone_name. Must match gryphon-forge base_domain."
+  description = "Base domain for OCP (must match gryphon-forge base_domain). Foundry sets create_ocp_private_zone true and creates a private hosted zone (Nest + Vault associated) when this is non-empty AND (route53_hosted_zone_name is empty OR the normalized names differ). Otherwise OCP uses the existing zone from route53_hosted_zone_name. gryphon-forge still creates api/api-int/*.apps records in that zone after load balancers exist."
   type        = string
   default     = ""
 }

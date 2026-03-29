@@ -27,15 +27,15 @@ locals {
     var.route53_hosted_zone_name != "" ? trimsuffix(var.route53_hosted_zone_name, ".") : null,
     ""
   )
-  # Create private hosted zone when: internal domain (e.g. fsi.internal) that differs from sandbox zone, or is the only domain set
+  # True => outputs create_ocp_private_zone and new aws_route53_zone (see outputs.ocp_route53_zone_source).
+  # api/api-int/*.apps records are created by gryphon-forge after NLBs exist, not by foundry.
   create_ocp_private_zone = var.ocp_base_domain != "" && (
     var.route53_hosted_zone_name == "" || trimsuffix(var.ocp_base_domain, ".") != trimsuffix(var.route53_hosted_zone_name, ".")
   )
 }
 
-# Private hosted zone for internal OCP domain (e.g. fsi.internal) when it differs from sandbox zone
-# Associated with both Vault (OCP nodes) and Nest (bastion) VPCs so the bastion can resolve
-# api.<cluster>.<domain> during bootstrap and oc login.
+# Private hosted zone for OCP when ocp_base_domain differs from route53_hosted_zone_name (or sandbox zone unset).
+# Associated with Vault and Nest so resolver can use the zone; record creation for api/api-int/*.apps is Ansible (forge).
 resource "aws_route53_zone" "ocp_internal" {
   count = local.create_ocp_private_zone ? 1 : 0
 
@@ -54,7 +54,7 @@ resource "aws_route53_zone" "ocp_internal" {
   })
 }
 
-# Route53 zone for UPI DNS records (api, api-int, *.apps) - use existing zone when not creating internal
+# Existing public/sandbox zone for OCP DNS when names match or ocp_base_domain is empty (outputs use this zone ID).
 data "aws_route53_zone" "ocp" {
   count = var.route53_hosted_zone_name != "" && !local.create_ocp_private_zone ? 1 : 0
 

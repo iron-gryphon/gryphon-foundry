@@ -227,7 +227,9 @@ export FOUNDRY_BASTION_SG=$(terraform output -raw bastion_security_group_id)
 | `bastion_hostname` | Bastion FQDN for SSH (when Route53 is configured) |
 | `bastion_public_ip` | Bastion IP (fallback when no Route53) |
 | `bastion_security_group_id` | Bastion SG ID (for gryphon-forge bootstrap SG rules allowing API/MCS from bastion) |
-| `internal_hosted_zone_id` | Route53 hosted zone ID for OCP DNS (api, api-int, *.apps) |
+| `create_ocp_private_zone` | `true` if foundry created the private OCP zone; `false` if using existing `route53_hosted_zone_name` or no DNS |
+| `ocp_route53_zone_source` | `foundry_private`, `existing_route53`, or `unset` — clarifies how `internal_hosted_zone_id` was resolved |
+| `internal_hosted_zone_id` | Zone where **gryphon-forge** creates `api` / `api-int` / `*.apps` aliases after NLBs exist (Nest+Vault are associated when the zone is private) |
 | `ingress_certificate_arn` | ACM certificate ARN for ingress (*.apps) when `create_ingress_certificate = true` |
 | `mirror_registry_url` | (when `create_mirror_registry`) DNS name for gryphon-forge `imageContentSources` |
 | `mirror_registry_additional_trust_bundle` | (when mirror enabled) PEM CA for Forge `install-config` `additionalTrustBundle` |

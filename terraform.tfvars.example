@@ -65,8 +65,12 @@ route53_hosted_zone_name = "your-sandbox-hosted-zone.example.com"
 # -----------------------------------------------------------------------------
 # OCP Base Domain (must match gryphon-forge base_domain)
 # -----------------------------------------------------------------------------
-# When using internal domain (e.g. fsi.internal), set this. Foundry creates a private
-# hosted zone for it. When empty, OCP uses route53_hosted_zone_name (sandbox zone).
+# create_ocp_private_zone (terraform output) is true when: ocp_base_domain is set and
+# either route53_hosted_zone_name is empty or the two differ (e.g. sandbox zone +
+# fsi.internal). Then outputs internal_hosted_zone_id is the new private zone.
+# If ocp_base_domain is empty, effective domain is route53_hosted_zone_name (existing zone).
+# If ocp_base_domain equals route53_hosted_zone_name, the existing zone is used (private zone not created).
+# gryphon-forge creates api, api-int, *.apps in that zone after NLBs exist—not Terraform.
 # ocp_base_domain = "fsi.internal"
 
 # -----------------------------------------------------------------------------
