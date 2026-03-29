@@ -27,7 +27,14 @@ err() {
 jq -e '.vault_vpc_id.value != null and (.vault_vpc_id.value | tostring | length) > 0' "$JSON_FILE" >/dev/null || err "missing vault_vpc_id.value"
 jq -e '((.vault_private_subnet_ids.value // .ocp_upi_subnet_ids.value) | type == "array") and ((.vault_private_subnet_ids.value // .ocp_upi_subnet_ids.value) | length >= 3)' "$JSON_FILE" >/dev/null \
   || err "need vault_private_subnet_ids.value or ocp_upi_subnet_ids.value with at least 3 subnets"
-jq -e '.internal_hosted_zone_id.value != null and (.internal_hosted_zone_id.value | tostring | length) > 0' "$JSON_FILE" >/dev/null || err "missing internal_hosted_zone_id.value"
+# internal_hosted_zone_id is null in outputs.tf when neither ocp_base_domain nor route53_hosted_zone_name is set; only require zone ID when a base domain is present.
+jq -e '
+  def base_domain: (.ocp_base_domain.value // "") | tostring;
+  if (base_domain | length) > 0 then
+    (.internal_hosted_zone_id.value != null and ((.internal_hosted_zone_id.value | tostring) | length) > 0)
+  else true end
+' "$JSON_FILE" >/dev/null \
+  || err "missing internal_hosted_zone_id.value (required when ocp_base_domain is set in foundry outputs)"
 jq -e '.region.value != null and (.region.value | tostring | length) > 0' "$JSON_FILE" >/dev/null || err "missing region.value"
 
 if jq -e '(.bastion_public_ip.value // .bastion_public_ip // "") | tostring | length > 0' "$JSON_FILE" >/dev/null; then
