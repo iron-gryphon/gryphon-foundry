@@ -24,22 +24,39 @@ variable "instance_type" {
   default     = "t3.micro"
 }
 
+variable "root_volume_gb" {
+  description = "Size of the root EBS volume (gp3) in GiB. Default ~20 GiB beyond typical AMI default for oc-mirror workspace, pull secret, and CLI tooling under /home/ec2-user."
+  type        = number
+  default     = 28
+}
+
 variable "ssh_allowed_cidrs" {
   description = "CIDR blocks allowed to SSH to bastion (e.g. [\"1.2.3.4/32\"] or [\"0.0.0.0/0\"] for any)"
   type        = list(string)
   default     = ["0.0.0.0/0"]
 }
 
-variable "oc_cli_version" {
-  description = "OpenShift CLI version to install on bastion (e.g. 4.15.0, stable)"
+variable "oc_release" {
+  description = "Release channel for openshift-client and oc-mirror on bastion (e.g. stable-4.20, 4.20.0). Must match ocp_version for mirroring."
   type        = string
-  default     = "stable"
+}
+
+variable "oc_mirror_pull_secret_path" {
+  description = "Path on bastion to pull secret JSON; ~ expands to $HOME in profile.d"
+  type        = string
 }
 
 variable "route53_hosted_zone_name" {
   description = "Route53 hosted zone name for bastion DNS record (bastion.<zone>). Leave empty to skip."
   type        = string
   default     = ""
+}
+
+variable "mirror_registry_ca_pem" {
+  description = "PEM of the offline CA that signs the Nest mirror registry TLS certificate. When non-empty, installs into system trust so oc mirror can push to docker://mirror.<domain>/... without x509 unknown authority errors."
+  type        = string
+  default     = ""
+  sensitive   = true
 }
 
 variable "tags" {

@@ -30,11 +30,12 @@ The foundry provisions a dual-VPC architecture to simulate a true "Sneakernet" w
 │   ├── security/           # IAM, KMS, and Security Group configurations
 │   ├── sneakernet/         # Automation for EBS/S3 data transfer
 │   ├── ocp-upi/            # Ignition-based OCP deployment logic
+│   ├── rhcos-ami/          # Import RHCOS from mirror (disconnected AWS)
 │   └── bastion/            # Internet-accessible jump host with OCP CLI
 ├── main.tf                 # Root-level config for sandbox
 ├── variables.tf
 ├── outputs.tf
-├── scripts/                # Helper tools for oc-mirror and image sync
+├── scripts/                # validate.sh, check-foundry-json-for-forge.sh, imageset-config.yaml.example
 └── README.md
 ```
 
@@ -132,6 +133,30 @@ To reach the OpenShift web console from your laptop over the bastion:
 
 **Alternative:** Use a SOCKS proxy: `ssh -D 1080 -i bastion-key.pem ec2-user@$(terraform output -raw bastion_hostname)`, then configure your browser to use `socks5://127.0.0.1:1080`.
 
+### Disconnected mirror registry (`oc-mirror`)
+
+When `create_mirror_registry = true`, Terraform deploys a Docker-registry-compatible host in the Nest and outputs `mirror_registry_url`, `mirror_registry_additional_trust_bundle`, and (optionally) `mirror_registry_public_ip`. **Populating images is a separate step** before gryphon-forge can install a disconnected cluster.
+
+1. **Example config** — Copy [`scripts/imageset-config.yaml.example`](scripts/imageset-config.yaml.example) to `imageset-config.yaml` and set `channels`, `minVersion`, and `maxVersion` to the OpenShift release you will install (same z-stream as `openshift-install` / gryphon-forge `ocp_version`).
+2. **Install the plugin** — On the bastion (or another connected host that can reach the registry), install the `oc-mirror` OpenShift CLI plugin per Red Hat documentation for your OCP version.
+3. **Trust the mirror CA** — The registry uses a Terraform-generated offline CA (`mirror_registry_additional_trust_bundle`). **New bastions** install that CA into the system trust store during bootstrap when `create_mirror_registry` is true, so `oc mirror` can verify `https://mirror.<domain>` without `x509: certificate signed by unknown authority`. **Existing bastions** created before that behavior (or if you run `oc mirror` from your laptop) must install the CA once:
+   ```bash
+   terraform output -raw mirror_registry_additional_trust_bundle | sudo tee /etc/pki/ca-trust/source/anchors/gryphon-mirror-registry-ca.pem
+   sudo update-ca-trust extract
+   ```
+   On macOS, add the PEM to Keychain Access as a trusted root, or run mirroring from the bastion after the steps above.
+4. **Mirror** — Use **oc-mirror v2** for current releases (see [`scripts/imageset-config.yaml.example`](scripts/imageset-config.yaml.example)); v1 is deprecated. Push to the path gryphon-forge expects (default `openshift/release` under your mirror host), for example:
+   ```bash
+   oc mirror -c imageset-config.yaml --workspace file://$(pwd)/oc-mirror-workspace \
+     docker://$(terraform output -raw mirror_registry_url)/openshift/release --v2
+   ```
+   Use your Red Hat pull secret (`oc registry login --registry registry.redhat.io` or a merged `config.json`). On the bastion, `gryphon_oc_mirror` wraps `oc mirror` with `--authfile` pointing at `oc_mirror_pull_secret_path` (oc-mirror v2; `--registry-config` is not supported on the v2 path).
+5. **gryphon-forge** — Pass `terraform output -json > foundry_output.json` so Forge picks up `mirror_registry_url` and `mirror_registry_additional_trust_bundle`. Set `openshift_install_release_image_override` to the **mirrored release image reference** (digest) from the `oc-mirror` output; see gryphon-forge `inventory/group_vars/all.yml`.
+
+Applying the bastion change that embeds the mirror CA **replaces** the bastion instance (new `user_data`). Prefer the manual trust commands if you must avoid replacement.
+
+Always verify flags and `ImageSetConfiguration` against [Red Hat disconnected environments](https://docs.redhat.com/en/documentation/openshift_container_platform/) for your release.
+
 ---
 
 ## 🔧 UPI Project: Expectations and Consuming Foundry Outputs
@@ -143,9 +168,10 @@ The foundry provisions infrastructure only. The **UPI project** (e.g., `gryphon-
 1. **Cluster sizing** – Define control plane, worker, and GPU worker counts, instance types, and root volume sizes.
 2. **Generate ignition configs** – Run `openshift-install create ignition-configs` (with pull secret from a secure source).
 3. **Provision EC2 instances** – Create bootstrap, control plane, and worker nodes in the **Vault private subnets** using the security groups provided by the foundry.
-4. **Create load balancers** – NLB/ALB for the API server and ingress (console, `*.apps`).
-5. **Create Route53 records** – In the sandbox hosted zone:
-   - `api.<cluster>.<domain>` → API load balancer
+4. **Create load balancers** – Internal **API NLB** (TCP **6443** and **22623** on the same load balancer, separate target groups) plus NLB/ALB for ingress (console, `*.apps`). gryphon-forge does **not** use a standalone MCS-only NLB: `api-int` must resolve to the same internal API NLB name so `https://api-int:22623/config/master` reaches MCS with the same hostname model as the Kubernetes API.
+5. **Create Route53 records** – In the OCP hosted zone (`internal_hosted_zone_id` when private):
+   - `api.<cluster>.<domain>` → API NLB
+   - `api-int.<cluster>.<domain>` → **same** internal API NLB (not a 6443-only or MCS-only LB)
    - `*.apps.<cluster>.<domain>` → Ingress load balancer
 6. **Complete bootstrap** – Approve CSRs and wait for the cluster to become ready.
 
@@ -157,7 +183,7 @@ From the **gryphon-foundry** directory (after `terraform apply`), export outputs
 
 ```bash
 cd gryphon-foundry
-terraform output -json > foundry-outputs.json
+terraform output -json > foundry_output.json
 ```
 
 **Option B: Individual outputs (for manual use or CI)**
@@ -172,6 +198,10 @@ terraform output -raw ocp_base_domain         # e.g. sandbox3704.opentlc.com (em
 
 # Bastion (for SSH jump host, oc login)
 terraform output -raw bastion_hostname        # or bastion_public_ip if no Route53
+
+# RHCOS AMI (when account cannot use Red Hat AMIs)
+terraform output -raw rhcos_ami_id            # Pass to gryphon-forge as rhcos_ami_id
+terraform output -raw bastion_security_group_id  # SG for bootstrap API/MCS rules (gryphon-forge)
 ```
 
 **Option C: Environment variables (for Ansible extra vars or shell)**
@@ -183,6 +213,7 @@ export FOUNDRY_VAULT_SG=$(terraform output -raw vault_security_group_id)
 export FOUNDRY_CLUSTER_NAME=$(terraform output -raw ocp_cluster_name)
 export FOUNDRY_BASE_DOMAIN=$(terraform output -raw ocp_base_domain)
 export FOUNDRY_BASTION=$(terraform output -raw bastion_hostname)
+export FOUNDRY_BASTION_SG=$(terraform output -raw bastion_security_group_id)
 ```
 
 ### Foundry Outputs Reference (UPI-relevant)
@@ -190,12 +221,28 @@ export FOUNDRY_BASTION=$(terraform output -raw bastion_hostname)
 | Output | Description |
 |--------|-------------|
 | `ocp_upi_subnet_ids` | Vault private subnet IDs for OCP node placement |
-| `vault_api_security_group_id` | Security group for API server (6443) and ingress (443) |
+| `vault_api_security_group_id` | Security group for API NLB targets / bootstrap (6443, **22623** MCS) and ingress (80/443) |
 | `vault_security_group_id` | Security group for node-to-node traffic |
 | `ocp_cluster_name` | Cluster name (used in `api.<cluster>.<domain>`) |
-| `ocp_base_domain` | Base domain for DNS (Route53 zone); empty if not set |
+| `ocp_base_domain` | Base domain for OCP DNS (api, api-int, *.apps). When set to internal domain (e.g. fsi.internal), foundry creates a private hosted zone. Must match gryphon-forge base_domain. |
 | `bastion_hostname` | Bastion FQDN for SSH (when Route53 is configured) |
 | `bastion_public_ip` | Bastion IP (fallback when no Route53) |
+| `bastion_security_group_id` | Bastion SG ID (for gryphon-forge bootstrap SG rules allowing API/MCS from bastion) |
+| `create_ocp_private_zone` | `true` if foundry created the private OCP zone; `false` if using existing `route53_hosted_zone_name` or no DNS |
+| `ocp_route53_zone_source` | `foundry_private`, `existing_route53`, or `unset` — clarifies how `internal_hosted_zone_id` was resolved |
+| `internal_hosted_zone_id` | Zone where **gryphon-forge** creates `api` / `api-int` / `*.apps` aliases after NLBs exist (Nest+Vault are associated when the zone is private) |
+| `ingress_certificate_arn` | ACM certificate ARN for ingress (*.apps) when `create_ingress_certificate = true` |
+| `mirror_registry_url` | (when `create_mirror_registry`) DNS name for gryphon-forge `imageContentSources` |
+| `mirror_registry_additional_trust_bundle` | (when mirror enabled) PEM CA for Forge `install-config` `additionalTrustBundle` |
+| `mirror_registry_public_ip` | (when mirror enabled) Public IP if you push from outside the VPC |
+
+### ACM Certificate for Ingress (Optional)
+
+When `create_ingress_certificate = true` in `terraform.tfvars`, the foundry creates an ACM certificate for `*.apps.<cluster>.<domain>`. gryphon-forge then uses an **ALB with HTTPS** instead of an NLB for ingress.
+
+**Public ACM** (for sandbox/public zones): Set `use_ingress_private_ca = false`. Requires `route53_hosted_zone_name`. Certificate is validated via DNS.
+
+**Private CA** (for internal domains like `fsi.internal`): Set `use_ingress_private_ca = true` and `ocp_ingress_base_domain = "fsi.internal"`. Creates an ACM Private CA and issues a private certificate—no DNS validation needed.
 
 The UPI project should use the bastion as the jump host for deployment and `oc login` after the cluster is ready.
 
