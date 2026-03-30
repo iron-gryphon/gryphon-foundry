@@ -53,7 +53,7 @@ output "vault_security_group_id" {
 }
 
 output "vault_api_security_group_id" {
-  description = "Security group ID for Vault API/ingress"
+  description = "Security group ID for Vault API/ingress (6443, 22623 MCS, 80/443). Use on NLB targets / bootstrap as needed; api-int uses the same internal API NLB as 6443 in gryphon-forge."
   value       = module.security.vault_api_security_group_id
 }
 
@@ -70,6 +70,11 @@ output "vault_receiving_bucket_name" {
   value       = module.sneakernet.vault_receiving_bucket_name
 }
 
+output "vault_aws_interface_endpoint_ids" {
+  description = "AWS interface VPC endpoint IDs in Vault (iam, sts, ec2, elasticloadbalancing, kms, autoscaling, route53)"
+  value       = module.sneakernet.vault_aws_interface_endpoint_ids
+}
+
 # -----------------------------------------------------------------------------
 # OCP UPI Outputs (consumed by the UPI project)
 # -----------------------------------------------------------------------------
@@ -84,12 +89,25 @@ output "ocp_cluster_name" {
 }
 
 output "ocp_base_domain" {
-  description = "Base domain for OCP DNS (Route53 hosted zone). Empty if not configured. Pass to gryphon-forge as base_domain."
+  description = "Effective base domain for OCP (api.<cluster>.<domain>, etc.). Pass to gryphon-forge as base_domain. gryphon-forge creates api, api-int, and *.apps records in this zone after load balancers exist; api-int aliases to the same internal API NLB as the Kubernetes API (listeners 6443 and 22623). The zone can be associated with Nest and Vault before those records exist."
   value       = local.ocp_base_domain_effective
 }
 
+# Makes DNS mode obvious in terraform output -json / foundry_output.json for gryphon-forge operators.
+output "create_ocp_private_zone" {
+  description = "True when foundry created aws_route53_zone.ocp_internal (private zone for ocp_base_domain differing from route53_hosted_zone_name, or internal-only domain). False when using an existing public/sandbox zone or when no OCP DNS is configured."
+  value       = local.create_ocp_private_zone
+}
+
+output "ocp_route53_zone_source" {
+  description = "How the OCP DNS zone is provided: foundry_private (new private zone in this account), existing_route53 (data source for route53_hosted_zone_name), or unset (no zone ID in outputs)."
+  value = local.create_ocp_private_zone ? "foundry_private" : (
+    var.route53_hosted_zone_name != "" ? "existing_route53" : "unset"
+  )
+}
+
 output "internal_hosted_zone_id" {
-  description = "Route53 hosted zone ID for OCP DNS records (api, api-int, *.apps). Pass to gryphon-forge as foundry_internal_hosted_zone_id."
+  description = "Route53 hosted zone ID where gryphon-forge should create api.<cluster>, api-int.<cluster>, and *.apps aliases after load balancers exist. api-int must point at the same internal API NLB as api (dual listeners 6443 + 22623), not a legacy MCS-only NLB. Associated with Nest and Vault when create_ocp_private_zone is true. Pass to gryphon-forge as foundry_internal_hosted_zone_id."
   value       = local.create_ocp_private_zone ? aws_route53_zone.ocp_internal[0].zone_id : (var.route53_hosted_zone_name != "" ? data.aws_route53_zone.ocp[0].id : null)
 }
 
@@ -126,6 +144,16 @@ output "bastion_hostname" {
   value       = module.bastion.bastion_hostname
 }
 
+output "oc_mirror_pull_secret_path" {
+  description = "Path on bastion for the Red Hat pull secret (copy JSON here; used by gryphon_oc_mirror and oc mirror --authfile)"
+  value       = var.oc_mirror_pull_secret_path
+}
+
+output "bastion_oc_release" {
+  description = "OpenShift client and oc-mirror release channel installed on bastion (mirror.openshift.com/clients/ocp/<channel>/...)"
+  value       = local.bastion_oc_release
+}
+
 # -----------------------------------------------------------------------------
 # Mirror Registry Outputs (disconnected OCP)
 # -----------------------------------------------------------------------------
@@ -137,6 +165,11 @@ output "mirror_registry_url" {
 output "mirror_registry_public_ip" {
   description = "Public IP of mirror registry (for oc-mirror from outside VPC)"
   value       = var.create_mirror_registry && local.ocp_base_domain_effective != "" ? module.mirror_registry[0].mirror_registry_public_ip : null
+}
+
+output "mirror_registry_private_ip" {
+  description = "Private IP of mirror registry (SSH from bastion in Nest VPC)"
+  value       = var.create_mirror_registry && local.ocp_base_domain_effective != "" ? module.mirror_registry[0].mirror_registry_ip : null
 }
 
 output "mirror_registry_additional_trust_bundle" {

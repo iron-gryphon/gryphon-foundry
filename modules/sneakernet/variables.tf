@@ -23,6 +23,22 @@ variable "vault_route_table_ids" {
   type        = list(string)
 }
 
+variable "vault_private_subnet_ids" {
+  description = "Vault private subnet IDs for AWS interface VPC endpoints (one subnet per AZ recommended)"
+  type        = list(string)
+}
+
+variable "vault_interface_endpoints_security_group_id" {
+  description = "Security group ID attached to interface VPC endpoints (ingress 443 from Vault CIDR)"
+  type        = string
+}
+
+variable "create_vault_aws_interface_endpoints" {
+  description = "When true, create interface VPC endpoints in Vault for IAM, STS, EC2, ELB, KMS, autoscaling, Route53 (required for mint-mode CCO and cloud controllers without public internet)"
+  type        = bool
+  default     = true
+}
+
 variable "sneakernet_kms_key_arn" {
   description = "ARN of KMS key for S3 bucket encryption"
   type        = string

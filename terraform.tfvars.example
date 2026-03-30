@@ -65,8 +65,12 @@ route53_hosted_zone_name = "your-sandbox-hosted-zone.example.com"
 # -----------------------------------------------------------------------------
 # OCP Base Domain (must match gryphon-forge base_domain)
 # -----------------------------------------------------------------------------
-# When using internal domain (e.g. fsi.internal), set this. Foundry creates a private
-# hosted zone for it. When empty, OCP uses route53_hosted_zone_name (sandbox zone).
+# create_ocp_private_zone (terraform output) is true when: ocp_base_domain is set and
+# either route53_hosted_zone_name is empty or the two differ (e.g. sandbox zone +
+# fsi.internal). Then outputs internal_hosted_zone_id is the new private zone.
+# If ocp_base_domain is empty, effective domain is route53_hosted_zone_name (existing zone).
+# If ocp_base_domain equals route53_hosted_zone_name, the existing zone is used (private zone not created).
+# gryphon-forge creates api, api-int, *.apps in that zone after NLBs exist—not Terraform.
 # ocp_base_domain = "fsi.internal"
 
 # -----------------------------------------------------------------------------
@@ -93,8 +97,17 @@ ocp_cluster_name = "gryphon-ocp"
 # -----------------------------------------------------------------------------
 bastion_key_name = "your-bastion-key-name"
 
+# Root disk for oc-mirror workspace and home-directory setup (default 28 GiB ≈ +20 GiB vs typical AMI)
+# bastion_root_volume_gb = 28
+
 # Optional: Restrict SSH to specific IPs for security
 # bastion_ssh_allowed_cidrs = ["1.2.3.4/32"]
+
+# OpenShift CLI + oc-mirror on bastion use stable-<ocp_version> unless you override:
+# bastion_oc_cli_version = "stable-4.20"
+
+# Where to copy your pull-secret.json on the bastion (default: ~/.openshift/pull-secret)
+# oc_mirror_pull_secret_path = "~/.openshift/pull-secret"
 
 # -----------------------------------------------------------------------------
 # Mirror registry (disconnected OCP — Nest VPC)
@@ -102,4 +115,5 @@ bastion_key_name = "your-bastion-key-name"
 # When true (default), provisions mirror.<ocp_base_domain> with TLS (SAN) and outputs
 # mirror_registry_url + mirror_registry_additional_trust_bundle for gryphon-forge.
 # create_mirror_registry = false
+# mirror_registry_root_volume_gb = 500
 # mirror_registry_tls_extra_san_dns_names = ["registry.example.internal"]

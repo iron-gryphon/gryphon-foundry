@@ -23,6 +23,11 @@ output "vault_s3_endpoint_id" {
   value       = aws_vpc_endpoint.vault_s3.id
 }
 
+output "vault_aws_interface_endpoint_ids" {
+  description = "Map of AWS service short name to interface VPC endpoint ID (Vault)"
+  value       = { for k, v in aws_vpc_endpoint.vault_aws_interface : k => v.id }
+}
+
 output "ebs_snapshot_share_policy_arn" {
   description = "ARN of IAM policy for EBS snapshot sharing"
   value       = aws_iam_policy.ebs_snapshot_share.arn

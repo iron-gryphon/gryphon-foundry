@@ -1,6 +1,10 @@
 # Bastion Module: Internet-accessible jump host with OCP CLI access to Vault
 # Deployed in Nest (connected) VPC, reaches OCP API in Vault via VPC peering
 
+locals {
+  oc_mirror_pull_secret_shell = replace(var.oc_mirror_pull_secret_path, "~", "$HOME")
+}
+
 data "aws_ami" "amazon_linux" {
   most_recent = true
   owners      = ["amazon"]
@@ -56,14 +60,41 @@ resource "aws_instance" "bastion" {
   vpc_security_group_ids      = [aws_security_group.bastion.id]
   associate_public_ip_address = true
 
+  root_block_device {
+    volume_type           = "gp3"
+    volume_size           = var.root_volume_gb
+    encrypted             = true
+    delete_on_termination = true
+  }
+
   user_data = <<-EOT
 #!/bin/bash
 set -e
-# Install OpenShift CLI (oc) for OCP access from bastion
-OC_VERSION="${var.oc_cli_version}"
-curl -sL "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/$${OC_VERSION}/openshift-client-linux.tar.gz" | tar xz -C /usr/local/bin
+%{if var.mirror_registry_ca_pem != ""}
+# Trust Foundry mirror registry offline CA (required for oc mirror to docker://mirror.<domain>/...)
+mkdir -p /etc/pki/ca-trust/source/anchors
+cat >/etc/pki/ca-trust/source/anchors/gryphon-mirror-registry-ca.pem <<'MIRROR_CA_EOF'
+${chomp(var.mirror_registry_ca_pem)}
+MIRROR_CA_EOF
+chmod 644 /etc/pki/ca-trust/source/anchors/gryphon-mirror-registry-ca.pem
+update-ca-trust extract
+%{endif}
+# OpenShift CLI + oc-mirror (same release channel as ocp_version via stable-<x.y>)
+OCP_RELEASE="${var.oc_release}"
+curl -fsSL "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/$${OCP_RELEASE}/openshift-client-linux.tar.gz" | tar xz -C /usr/local/bin
 chmod +x /usr/local/bin/oc /usr/local/bin/kubectl
-echo "Bastion ready. Use 'oc login' with OCP API URL (e.g. https://api.<cluster>.<domain>:6443) after cluster is deployed."
+curl -fsSL "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/$${OCP_RELEASE}/oc-mirror.tar.gz" | tar xz -C /usr/local/bin
+chmod +x /usr/local/bin/oc-mirror
+mkdir -p /home/ec2-user/.openshift
+chown ec2-user:ec2-user /home/ec2-user/.openshift
+cat >/etc/profile.d/gryphon-oc-mirror.sh <<'EOS'
+# gryphon-foundry: pull secret for oc mirror (copy JSON from cloud.redhat.com)
+export GRYPHON_OCP_PULL_SECRET="${local.oc_mirror_pull_secret_shell}"
+gryphon_oc_mirror() {
+  oc mirror --authfile "$${GRYPHON_OCP_PULL_SECRET}" "$$@"
+}
+EOS
+echo "Bastion ready: oc, oc mirror plugin, oc-mirror binary. Configure pull secret at ${local.oc_mirror_pull_secret_shell} then use: gryphon_oc_mirror <args>"
 EOT
 
   tags = merge(var.tags, {

@@ -56,6 +56,12 @@ variable "instance_type" {
   default     = "t3.medium"
 }
 
+variable "root_volume_gb" {
+  description = "Size of the root EBS volume (gp3) in GiB. Registry data lives under /opt/registry/data on this volume; OCP release + operators + graph need hundreds of GiB."
+  type        = number
+  default     = 500
+}
+
 variable "mirror_registry_tls_extra_san_dns_names" {
   description = "Extra DNS names for the registry TLS certificate SAN extension. mirror.<base_domain> is always included."
   type        = list(string)
