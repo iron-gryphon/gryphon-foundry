@@ -103,6 +103,23 @@ resource "aws_security_group" "vault_api" {
     cidr_blocks = [var.nest_vpc_cidr]
   }
 
+  # Machine Config Server (same internal hostname as API: https://api-int:22623/... on masters)
+  ingress {
+    description = "MCS (Machine Config Server) from Vault"
+    from_port   = 22623
+    to_port     = 22623
+    protocol    = "tcp"
+    cidr_blocks = [var.vault_vpc_cidr]
+  }
+
+  ingress {
+    description = "MCS from bastion in Nest"
+    from_port   = 22623
+    to_port     = 22623
+    protocol    = "tcp"
+    cidr_blocks = [var.nest_vpc_cidr]
+  }
+
   ingress {
     description = "HTTP"
     from_port   = 80

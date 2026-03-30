@@ -168,9 +168,10 @@ The foundry provisions infrastructure only. The **UPI project** (e.g., `gryphon-
 1. **Cluster sizing** – Define control plane, worker, and GPU worker counts, instance types, and root volume sizes.
 2. **Generate ignition configs** – Run `openshift-install create ignition-configs` (with pull secret from a secure source).
 3. **Provision EC2 instances** – Create bootstrap, control plane, and worker nodes in the **Vault private subnets** using the security groups provided by the foundry.
-4. **Create load balancers** – NLB/ALB for the API server and ingress (console, `*.apps`).
-5. **Create Route53 records** – In the sandbox hosted zone:
-   - `api.<cluster>.<domain>` → API load balancer
+4. **Create load balancers** – Internal **API NLB** (TCP **6443** and **22623** on the same load balancer, separate target groups) plus NLB/ALB for ingress (console, `*.apps`). gryphon-forge does **not** use a standalone MCS-only NLB: `api-int` must resolve to the same internal API NLB name so `https://api-int:22623/config/master` reaches MCS with the same hostname model as the Kubernetes API.
+5. **Create Route53 records** – In the OCP hosted zone (`internal_hosted_zone_id` when private):
+   - `api.<cluster>.<domain>` → API NLB
+   - `api-int.<cluster>.<domain>` → **same** internal API NLB (not a 6443-only or MCS-only LB)
    - `*.apps.<cluster>.<domain>` → Ingress load balancer
 6. **Complete bootstrap** – Approve CSRs and wait for the cluster to become ready.
 
@@ -220,7 +221,7 @@ export FOUNDRY_BASTION_SG=$(terraform output -raw bastion_security_group_id)
 | Output | Description |
 |--------|-------------|
 | `ocp_upi_subnet_ids` | Vault private subnet IDs for OCP node placement |
-| `vault_api_security_group_id` | Security group for API server (6443) and ingress (443) |
+| `vault_api_security_group_id` | Security group for API NLB targets / bootstrap (6443, **22623** MCS) and ingress (80/443) |
 | `vault_security_group_id` | Security group for node-to-node traffic |
 | `ocp_cluster_name` | Cluster name (used in `api.<cluster>.<domain>`) |
 | `ocp_base_domain` | Base domain for OCP DNS (api, api-int, *.apps). When set to internal domain (e.g. fsi.internal), foundry creates a private hosted zone. Must match gryphon-forge base_domain. |

@@ -53,7 +53,7 @@ output "vault_security_group_id" {
 }
 
 output "vault_api_security_group_id" {
-  description = "Security group ID for Vault API/ingress"
+  description = "Security group ID for Vault API/ingress (6443, 22623 MCS, 80/443). Use on NLB targets / bootstrap as needed; api-int uses the same internal API NLB as 6443 in gryphon-forge."
   value       = module.security.vault_api_security_group_id
 }
 
@@ -89,7 +89,7 @@ output "ocp_cluster_name" {
 }
 
 output "ocp_base_domain" {
-  description = "Effective base domain for OCP (api.<cluster>.<domain>, etc.). Pass to gryphon-forge as base_domain. gryphon-forge creates api, api-int, and *.apps records in this zone after API/ingress load balancers exist; the zone can be associated with Nest and Vault before those records exist."
+  description = "Effective base domain for OCP (api.<cluster>.<domain>, etc.). Pass to gryphon-forge as base_domain. gryphon-forge creates api, api-int, and *.apps records in this zone after load balancers exist; api-int aliases to the same internal API NLB as the Kubernetes API (listeners 6443 and 22623). The zone can be associated with Nest and Vault before those records exist."
   value       = local.ocp_base_domain_effective
 }
 
@@ -107,7 +107,7 @@ output "ocp_route53_zone_source" {
 }
 
 output "internal_hosted_zone_id" {
-  description = "Route53 hosted zone ID where gryphon-forge should create api.<cluster>, api-int.<cluster>, and *.apps aliases (after NLBs exist). Associated with Nest and Vault when create_ocp_private_zone is true. Pass to gryphon-forge as foundry_internal_hosted_zone_id."
+  description = "Route53 hosted zone ID where gryphon-forge should create api.<cluster>, api-int.<cluster>, and *.apps aliases after load balancers exist. api-int must point at the same internal API NLB as api (dual listeners 6443 + 22623), not a legacy MCS-only NLB. Associated with Nest and Vault when create_ocp_private_zone is true. Pass to gryphon-forge as foundry_internal_hosted_zone_id."
   value       = local.create_ocp_private_zone ? aws_route53_zone.ocp_internal[0].zone_id : (var.route53_hosted_zone_name != "" ? data.aws_route53_zone.ocp[0].id : null)
 }
 
