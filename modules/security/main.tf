@@ -84,8 +84,18 @@ resource "aws_security_group" "vault" {
 # -----------------------------------------------------------------------------
 resource "aws_security_group" "vault_api" {
   name        = "${var.environment}-vault-api-sg"
-  description = "Security group for Vault OCP API and ingress traffic"
+  description = "Vault OCP API, MCS, ingress (80/443), and bootstrap etcd (2379/2380) from Vault VPC"
   vpc_id      = var.vault_vpc_id
+
+  # Temporary bootstrap etcd: control-plane nodes must reach the bootstrap private IP on 2379 (client)
+  # and 2380 (peer) before membership migrates. Not opened from Nest — etcd stays Vault-internal.
+  ingress {
+    description = "Bootstrap etcd client and peer from Vault VPC (TCP 2379-2380)"
+    from_port   = 2379
+    to_port     = 2380
+    protocol    = "tcp"
+    cidr_blocks = [var.vault_vpc_cidr]
+  }
 
   ingress {
     description = "HTTPS (OCP API) from Vault"

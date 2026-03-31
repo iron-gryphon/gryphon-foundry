@@ -14,12 +14,12 @@ output "nest_security_group_id" {
 }
 
 output "vault_security_group_id" {
-  description = "ID of the Vault security group"
+  description = "Vault VPC default SG: broad TCP/UDP ingress+egress within vault_vpc_cidr. Attach to nodes that need general intra-VPC connectivity; pair with vault_api when API/MCS/bootstrap etcd rules are required."
   value       = aws_security_group.vault.id
 }
 
 output "vault_api_security_group_id" {
-  description = "ID of the Vault API/ingress security group"
+  description = "API 6443, MCS 22623, HTTP/S ingress, and bootstrap etcd 2379-2380 from vault_vpc_cidr only. If this is the only SG on bootstrap/masters/NLB targets, it now allows master→bootstrap etcd; do not rely on Nest for etcd."
   value       = aws_security_group.vault_api.id
 }
 
