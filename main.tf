@@ -35,7 +35,8 @@ locals {
 }
 
 # Private hosted zone for OCP when ocp_base_domain differs from route53_hosted_zone_name (or sandbox zone unset).
-# Associated with Vault and Nest so resolver can use the zone; record creation for api/api-int/*.apps is Ansible (forge).
+# Primary VPC at create time is Vault so AmazonProvidedDNS in worker subnets resolves api-int (Ignition/MCS).
+# Nest is attached via aws_route53_zone_association (same effect as a second inline vpc block; explicit for clarity).
 resource "aws_route53_zone" "ocp_internal" {
   count = local.create_ocp_private_zone ? 1 : 0
 
@@ -45,13 +46,16 @@ resource "aws_route53_zone" "ocp_internal" {
     vpc_id = module.vpc.vault_vpc_id
   }
 
-  vpc {
-    vpc_id = module.vpc.nest_vpc_id
-  }
-
   tags = merge(var.tags, {
     Name = "${var.environment}-ocp-internal-${replace(trimsuffix(var.ocp_base_domain, "."), ".", "-")}"
   })
+}
+
+resource "aws_route53_zone_association" "ocp_internal_nest" {
+  count = local.create_ocp_private_zone ? 1 : 0
+
+  zone_id = aws_route53_zone.ocp_internal[0].zone_id
+  vpc_id  = module.vpc.nest_vpc_id
 }
 
 # Existing public/sandbox zone for OCP DNS when names match or ocp_base_domain is empty (outputs use this zone ID).
@@ -59,6 +63,19 @@ data "aws_route53_zone" "ocp" {
   count = var.route53_hosted_zone_name != "" && !local.create_ocp_private_zone ? 1 : 0
 
   name = var.route53_hosted_zone_name
+}
+
+# When OCP reuses an existing private zone that was only linked to Nest (or another VPC), workers in Vault get NXDOMAIN
+# on api-int unless Vault is associated. Skip for public zones (association is invalid).
+resource "aws_route53_zone_association" "ocp_existing_private_to_vault" {
+  count = (
+    var.associate_existing_ocp_route53_zone_with_vault_vpc &&
+    length(data.aws_route53_zone.ocp) > 0 &&
+    data.aws_route53_zone.ocp[0].private_zone
+  ) ? 1 : 0
+
+  zone_id = data.aws_route53_zone.ocp[0].zone_id
+  vpc_id  = module.vpc.vault_vpc_id
 }
 
 # -----------------------------------------------------------------------------

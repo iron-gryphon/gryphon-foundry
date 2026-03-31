@@ -32,9 +32,12 @@ jq -e '
   def base_domain: (.ocp_base_domain.value // "") | tostring;
   if (base_domain | length) > 0 then
     (.internal_hosted_zone_id.value != null and ((.internal_hosted_zone_id.value | tostring) | length) > 0)
+    and (.ocp_cluster_name.value != null and ((.ocp_cluster_name.value | tostring) | length) > 0)
+    and (.ocp_api_int_fqdn.value != null and ((.ocp_api_int_fqdn.value | tostring) | length) > 0)
+    and (.vault_vpc_amazon_provided_dns.value != null and ((.vault_vpc_amazon_provided_dns.value | tostring) | length) > 0)
   else true end
 ' "$JSON_FILE" >/dev/null \
-  || err "missing internal_hosted_zone_id.value (required when ocp_base_domain is set in foundry outputs)"
+  || err "missing internal_hosted_zone_id, ocp_cluster_name, ocp_api_int_fqdn, or vault_vpc_amazon_provided_dns (required when ocp_base_domain is set)"
 jq -e '.region.value != null and (.region.value | tostring | length) > 0' "$JSON_FILE" >/dev/null || err "missing region.value"
 
 if jq -e '(.bastion_public_ip.value // .bastion_public_ip // "") | tostring | length > 0' "$JSON_FILE" >/dev/null; then

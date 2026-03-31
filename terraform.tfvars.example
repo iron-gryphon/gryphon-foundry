@@ -72,6 +72,10 @@ route53_hosted_zone_name = "your-sandbox-hosted-zone.example.com"
 # If ocp_base_domain equals route53_hosted_zone_name, the existing zone is used (private zone not created).
 # gryphon-forge creates api, api-int, *.apps in that zone after NLBs exist—not Terraform.
 # ocp_base_domain = "fsi.internal"
+#
+# When reusing an existing *private* zone (same name as route53_hosted_zone_name), Foundry
+# associates it with the Vault VPC by default. Set false only if you use Resolver forwarding:
+# associate_existing_ocp_route53_zone_with_vault_vpc = false
 
 # -----------------------------------------------------------------------------
 # Optional: OCP cluster name (used for API URL; cluster sizing is in the UPI project)

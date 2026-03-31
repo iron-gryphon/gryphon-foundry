@@ -138,6 +138,12 @@ variable "ocp_base_domain" {
   default     = ""
 }
 
+variable "associate_existing_ocp_route53_zone_with_vault_vpc" {
+  description = "When true (default) and OCP uses an existing private Route53 zone from route53_hosted_zone_name (create_ocp_private_zone false), associate that zone with the Vault VPC so AmazonProvidedDNS resolves api-int in worker subnets. Set false if you intentionally use Route53 Resolver forwarding or another split-DNS design instead of zone association."
+  type        = bool
+  default     = true
+}
+
 # -----------------------------------------------------------------------------
 # Bastion Host
 # -----------------------------------------------------------------------------
