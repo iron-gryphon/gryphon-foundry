@@ -72,6 +72,8 @@ resource "aws_vpc" "vault" {
   })
 }
 
+# No custom network ACLs: subnets use the VPC default NACL (allow all in/out). That permits
+# control-plane → bootstrap etcd on TCP 2379/2380 within the Vault VPC without extra NACL rules.
 resource "aws_subnet" "vault_private" {
   count = length(var.vault_private_subnet_cidrs)
 

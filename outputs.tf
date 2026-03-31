@@ -48,12 +48,12 @@ output "sneakernet_kms_key_arn" {
 }
 
 output "vault_security_group_id" {
-  description = "Security group ID for Vault"
+  description = "Vault SG: full TCP/UDP within vault_vpc_cidr. Use with vault_api on nodes that need both broad VPC traffic and pinned API/MCS/etcd ingress; attaching vault_api alone is insufficient for arbitrary intra-VPC ports."
   value       = module.security.vault_security_group_id
 }
 
 output "vault_api_security_group_id" {
-  description = "Security group ID for Vault API/ingress (6443, 22623 MCS, 80/443). Use on NLB targets / bootstrap as needed; api-int uses the same internal API NLB as 6443 in gryphon-forge."
+  description = "Vault API/ingress SG: 6443, 22623 (MCS), 80/443, and bootstrap etcd 2379-2380 from vault_vpc_cidr. Safe for NLB targets / bootstrap / masters when gryphon-forge also applies cluster SGs; align Forge bootstrap-sg with Foundry so the same ports are allowed wherever bootstrap ENIs are attached."
   value       = module.security.vault_api_security_group_id
 }
 
