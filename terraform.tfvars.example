@@ -102,7 +102,7 @@ ocp_cluster_name = "gryphon-ocp"
 bastion_key_name = "your-bastion-key-name"
 
 # Root disk for oc-mirror workspace and home-directory setup (default 28 GiB ≈ +20 GiB vs typical AMI)
-# bastion_root_volume_gb = 28
+# bastion_root_volume_gb = 32
 
 # Optional: Restrict SSH to specific IPs for security
 # bastion_ssh_allowed_cidrs = ["1.2.3.4/32"]

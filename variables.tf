@@ -159,9 +159,9 @@ variable "bastion_instance_type" {
 }
 
 variable "bastion_root_volume_gb" {
-  description = "Bastion root EBS volume size (GiB, gp3). Default adds ~20 GiB beyond typical AMI size for oc-mirror workspace and persistence under ec2-user home."
+  description = "Bastion root EBS volume size (GiB, gp3). Must be >= 30 for current Amazon Linux 2023 AMIs (snapshot minimum); default includes a small margin for oc-mirror workspace under ec2-user home."
   type        = number
-  default     = 28
+  default     = 32
 }
 
 variable "bastion_ssh_allowed_cidrs" {
