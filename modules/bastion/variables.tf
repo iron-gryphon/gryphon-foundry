@@ -25,9 +25,14 @@ variable "instance_type" {
 }
 
 variable "root_volume_gb" {
-  description = "Size of the root EBS volume (gp3) in GiB. Default ~20 GiB beyond typical AMI default for oc-mirror workspace, pull secret, and CLI tooling under /home/ec2-user."
+  description = "Size of the root EBS volume (gp3) in GiB. Must be at least the AMI snapshot size (Amazon Linux 2023 is typically 30 GiB); default leaves a small margin beyond that for oc-mirror workspace and tooling under /home/ec2-user."
   type        = number
-  default     = 28
+  default     = 32
+
+  validation {
+    condition     = var.root_volume_gb >= 30
+    error_message = "root_volume_gb must be >= 30 GiB to satisfy the Amazon Linux 2023 root snapshot minimum (EC2 InvalidBlockDeviceMapping if smaller)."
+  }
 }
 
 variable "ssh_allowed_cidrs" {
