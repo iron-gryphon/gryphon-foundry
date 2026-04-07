@@ -138,6 +138,12 @@ variable "ocp_base_domain" {
   default     = ""
 }
 
+variable "associate_existing_ocp_route53_zone_with_vault_vpc" {
+  description = "When true (default) and OCP uses an existing private Route53 zone from route53_hosted_zone_name (create_ocp_private_zone false), associate that zone with the Vault VPC so AmazonProvidedDNS resolves api-int in worker subnets. Set false if you intentionally use Route53 Resolver forwarding or another split-DNS design instead of zone association."
+  type        = bool
+  default     = true
+}
+
 # -----------------------------------------------------------------------------
 # Bastion Host
 # -----------------------------------------------------------------------------
@@ -153,9 +159,9 @@ variable "bastion_instance_type" {
 }
 
 variable "bastion_root_volume_gb" {
-  description = "Bastion root EBS volume size (GiB, gp3). Default adds ~20 GiB beyond typical AMI size for oc-mirror workspace and persistence under ec2-user home."
+  description = "Bastion root EBS volume size (GiB, gp3). Must be >= 30 for current Amazon Linux 2023 AMIs (snapshot minimum); default includes a small margin for oc-mirror workspace under ec2-user home."
   type        = number
-  default     = 28
+  default     = 32
 }
 
 variable "bastion_ssh_allowed_cidrs" {

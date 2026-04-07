@@ -48,12 +48,12 @@ output "sneakernet_kms_key_arn" {
 }
 
 output "vault_security_group_id" {
-  description = "Security group ID for Vault"
+  description = "Vault SG: full TCP/UDP within vault_vpc_cidr. Use with vault_api on nodes that need both broad VPC traffic and pinned API/MCS/etcd ingress; attaching vault_api alone is insufficient for arbitrary intra-VPC ports."
   value       = module.security.vault_security_group_id
 }
 
 output "vault_api_security_group_id" {
-  description = "Security group ID for Vault API/ingress (6443, 22623 MCS, 80/443). Use on NLB targets / bootstrap as needed; api-int uses the same internal API NLB as 6443 in gryphon-forge."
+  description = "Vault API/ingress SG: TCP 6443 (kube-apiserver) and 22623 (MCS for api-int Ignition) from vault_vpc_cidr (and matching ports from nest_vpc_cidr for bastion). Attach to internal NLB targets or master/bootstrap ENIs in Vault so workers in worker subnets can reach the API/MCS NLB. Also 80/443 and bootstrap etcd 2379-2380 from vault_vpc_cidr. Align Forge bootstrap/cluster SGs with these rules."
   value       = module.security.vault_api_security_group_id
 }
 
@@ -84,12 +84,22 @@ output "ocp_upi_subnet_ids" {
 }
 
 output "ocp_cluster_name" {
-  description = "OpenShift cluster name for UPI (used in api.<cluster>.<domain>)"
+  description = "OpenShift cluster name for UPI and Forge (api.<cluster>.<domain>, api-int.<cluster>.<domain>). Pass to gryphon-forge so install-config and Route53 records match."
   value       = module.ocp_upi.cluster_name
 }
 
+output "ocp_api_int_fqdn" {
+  description = "FQDN workers use for Ignition/MCS (api-int.<cluster>.<base_domain>). After Forge creates the record, verify with dig from Vault using vault_vpc_amazon_provided_dns."
+  value       = local.ocp_base_domain_effective != "" ? "api-int.${module.ocp_upi.cluster_name}.${trimsuffix(local.ocp_base_domain_effective, ".")}" : null
+}
+
+output "vault_vpc_amazon_provided_dns" {
+  description = "VPC DNS resolver address (network + 2) in Vault. From a host in Vault worker subnets: dig +short $(terraform output -raw ocp_api_int_fqdn) @$(terraform output -raw vault_vpc_amazon_provided_dns)"
+  value       = cidrhost(module.vpc.vault_vpc_cidr, 2)
+}
+
 output "ocp_base_domain" {
-  description = "Effective base domain for OCP (api.<cluster>.<domain>, etc.). Pass to gryphon-forge as base_domain. gryphon-forge creates api, api-int, and *.apps records in this zone after load balancers exist; api-int aliases to the same internal API NLB as the Kubernetes API (listeners 6443 and 22623). The zone can be associated with Nest and Vault before those records exist."
+  description = "Effective base domain for OCP (api.<cluster>.<domain>, etc.). Pass to gryphon-forge as base_domain. gryphon-forge creates api, api-int, and *.apps records in this zone after load balancers exist; api-int aliases to the same internal API NLB as the Kubernetes API (listeners 6443 and 22623). The zone must be associated with Vault (and Nest when used); see create_ocp_private_zone / aws_route53_zone_association resources."
   value       = local.ocp_base_domain_effective
 }
 
@@ -107,7 +117,7 @@ output "ocp_route53_zone_source" {
 }
 
 output "internal_hosted_zone_id" {
-  description = "Route53 hosted zone ID where gryphon-forge should create api.<cluster>, api-int.<cluster>, and *.apps aliases after load balancers exist. api-int must point at the same internal API NLB as api (dual listeners 6443 + 22623), not a legacy MCS-only NLB. Associated with Nest and Vault when create_ocp_private_zone is true. Pass to gryphon-forge as foundry_internal_hosted_zone_id."
+  description = "Route53 hosted zone ID where gryphon-forge should create api.<cluster>, api-int.<cluster>, and *.apps aliases after load balancers exist. api-int must point at the same internal API NLB as api (dual listeners 6443 + 22623), not a legacy MCS-only NLB. When create_ocp_private_zone is true, Vault is the zone primary VPC and Nest is associated via aws_route53_zone_association.ocp_internal_nest. When using an existing private zone (same name as ocp_base_domain), aws_route53_zone_association.ocp_existing_private_to_vault links Vault. Pass to gryphon-forge as foundry_internal_hosted_zone_id."
   value       = local.create_ocp_private_zone ? aws_route53_zone.ocp_internal[0].zone_id : (var.route53_hosted_zone_name != "" ? data.aws_route53_zone.ocp[0].id : null)
 }
 
