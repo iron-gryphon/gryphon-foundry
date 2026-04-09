@@ -15,19 +15,34 @@ We welcome contributions from Red Hatters, partners, and the wider FSI community
 
 ## 🛠️ How to Contribute
 
-### 1. Reporting Issues
+### 1. Local Development Setup
+
+After cloning the repo, install the pre-commit hooks so `terraform fmt` and `terraform validate` run automatically before each commit:
+
+```bash
+pip install -r requirements-dev.txt
+pre-commit install
+```
+
+To run hooks manually against all files:
+
+```bash
+pre-commit run --all-files
+```
+
+### 2. Reporting Issues
 Found a bug or have a feature request?
 * Check the [Issues](https://github.com/iron-gryphon/gryphon-foundry/issues) tab to see if it has already been reported.
 * If not, open a new issue. Use a clear title and provide as much context as possible (AWS region, OCP version, etc.).
 
-### 2. Branch Workflow: dev → main
+### 3. Branch Workflow: dev → main
 We use a two-stage branch workflow:
 * **`dev`** — Integration branch for ongoing work. All PRs should target `dev` first.
 * **`main`** — Production-ready code. Changes reach `main` only after review and merge from `dev`.
 
 **Workflow:** Create your feature branch from `dev` → open a PR into `dev` → after review and merge, maintainers promote `dev` to `main` when ready for release.
 
-### 3. Submitting Pull Requests (PRs)
+### 4. Submitting Pull Requests (PRs)
 1.  **Branch from dev:** Create your own branch from `dev` (not `main`).
 2.  **Code & Format:** * Ensure all Terraform code is formatted using `terraform fmt`.
     * Use descriptive variable names (e.g., `vault_vpc_cidr` instead of `vpc_b`).
