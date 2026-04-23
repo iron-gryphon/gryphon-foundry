@@ -57,6 +57,12 @@ Before you begin forging your environment, ensure you have the following tools i
 * **AWS CLI**: Configured with credentials that have permission to manage VPCs, EC2, S3, and KMS. See [SETUP.md](SETUP.md) for credential configuration.
 * **OpenShift Installer & CLI (oc)**: Necessary for generating ignition files and interacting with the air-gapped cluster.
 * **Red Hat Pull Secret**: Required to mirror images into the local registry.
+* **pre-commit**: Install hooks to run `terraform fmt` automatically on every commit:
+
+```bash
+pip install -r requirements-dev.txt
+pre-commit install
+```
 
 ### Deployment Steps
 1.  **Clone the Foundry:**
