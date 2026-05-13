@@ -242,13 +242,25 @@ export FOUNDRY_BASTION_SG=$(terraform output -raw bastion_security_group_id)
 | `mirror_registry_additional_trust_bundle` | (when mirror enabled) PEM CA for Forge `install-config` `additionalTrustBundle` |
 | `mirror_registry_public_ip` | (when mirror enabled) Public IP if you push from outside the VPC |
 
+### TLS certificates and Route53 zones
+
+Disconnected or sandbox-style installs often use **two zones**: a **public or sandbox zone** (`route53_hosted_zone_name`) and a **separate OCP base domain** (`ocp_base_domain`, commonly an internal name such as `fsi.internal`). The following table maps **which TLS applies where** so you do not confuse ACM ingress material with the mirror registry’s offline CA.
+
+| What | Certificate source | Names on the cert | Which Route53 zone is involved |
+|------|-------------------|-------------------|-------------------------------|
+| **Bastion hostname** | No TLS from Foundry (SSH only) | — | **`route53_hosted_zone_name`**: `bastion.<zone>` when set |
+| **Mirror registry** (`create_mirror_registry`) | **Terraform-generated** offline CA + server cert (**not** ACM) | `mirror.<effective_OCP_domain>` — effective domain is `ocp_base_domain` if set, else `route53_hosted_zone_name` (see `terraform.tfvars.example`) | **`mirror.<domain>` → registry** is created **only** when Foundry creates the **private** OCP zone (`create_ocp_private_zone` true, i.e. internal `ocp_base_domain` differs from the sandbox zone or no sandbox zone). The A record lives in that **private** zone. If both domains are the same single zone and no private zone is created, Foundry does **not** add the mirror A record—plan DNS for the registry accordingly. |
+| **Ingress** (`create_ingress_certificate`) | **ACM** (public DNS validation **or** ACM Private CA) | `*.apps.<cluster>.<ingress_base>` where `<ingress_base>` = `ocp_ingress_base_domain` if set, otherwise `route53_hosted_zone_name` | **Public ACM**: ACM validation records go in **`route53_hosted_zone_name`**. **Private CA** (`use_ingress_private_ca = true`): no validation records; cert matches the internal ingress base (typically the same string as `ocp_base_domain`). OCP app DNS (`*.apps.<cluster>.<domain>`) is still created by **gryphon-forge** in the OCP zone (`internal_hosted_zone_id`). |
+
+**Trust bundles:** use `mirror_registry_additional_trust_bundle` for **image pulls** against the mirror (install-config `additionalTrustBundle` / node trust). Ingress termination uses the **ACM certificate** from `ingress_certificate_arn`; that is separate from the mirror CA.
+
 ### ACM Certificate for Ingress (Optional)
 
-When `create_ingress_certificate = true` in `terraform.tfvars`, the foundry creates an ACM certificate for `*.apps.<cluster>.<domain>`. gryphon-forge then uses an **ALB with HTTPS** instead of an NLB for ingress.
+When `create_ingress_certificate = true` in `terraform.tfvars`, the foundry creates an ACM certificate for `*.apps.<cluster>.<ingress_base>` (see table above). gryphon-forge then uses an **ALB with HTTPS** instead of an NLB for ingress.
 
-**Public ACM** (for sandbox/public zones): Set `use_ingress_private_ca = false`. Requires `route53_hosted_zone_name`. Certificate is validated via DNS.
+**Public ACM** (for sandbox/public zones): Set `use_ingress_private_ca = false`. Requires `route53_hosted_zone_name`. Certificate is validated via DNS **in that zone**.
 
-**Private CA** (for internal domains like `fsi.internal`): Set `use_ingress_private_ca = true` and `ocp_ingress_base_domain = "fsi.internal"`. Creates an ACM Private CA and issues a private certificate—no DNS validation needed.
+**Private CA** (for internal domains like `fsi.internal`): Set `use_ingress_private_ca = true` and set `ocp_ingress_base_domain` to the same internal domain you use for OCP (e.g. `fsi.internal`). Creates an ACM Private CA and issues a private certificate—no DNS validation records.
 
 The UPI project should use the bastion as the jump host for deployment and `oc login` after the cluster is ready.
 
