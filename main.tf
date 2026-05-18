@@ -32,6 +32,12 @@ locals {
   create_ocp_private_zone = var.ocp_base_domain != "" && (
     var.route53_hosted_zone_name == "" || trimsuffix(var.ocp_base_domain, ".") != trimsuffix(var.route53_hosted_zone_name, ".")
   )
+
+  ocp_hosted_zone_id = (
+    local.create_ocp_private_zone
+    ? aws_route53_zone.ocp_internal[0].zone_id
+    : (length(data.aws_route53_zone.ocp) > 0 ? data.aws_route53_zone.ocp[0].zone_id : "")
+  )
 }
 
 # Private hosted zone for OCP when ocp_base_domain differs from route53_hosted_zone_name (or sandbox zone unset).
@@ -219,7 +225,7 @@ module "mirror_registry" {
   root_volume_gb                          = var.mirror_registry_root_volume_gb
   mirror_registry_tls_extra_san_dns_names = var.mirror_registry_tls_extra_san_dns_names
   ssh_allowed_cidrs                       = var.bastion_ssh_allowed_cidrs
-  hosted_zone_id                          = local.create_ocp_private_zone ? aws_route53_zone.ocp_internal[0].zone_id : ""
-  create_route53_record                   = local.create_ocp_private_zone
+  hosted_zone_id                          = local.ocp_hosted_zone_id
+  create_route53_record                   = local.create_ocp_private_zone || length(data.aws_route53_zone.ocp) > 0
   tags                                    = var.tags
 }
