@@ -147,7 +147,7 @@ resource "null_resource" "import_rhcos" {
       fi
 
       if [ ! -f "$${VMDK}" ]; then
-        echo "ERROR: Could not obtain VMDK. Try setting rhcos_mirror_base to a specific version (e.g. 4.20)."
+        echo "ERROR: Could not obtain VMDK. Try setting rhcos_mirror_base to a specific version (e.g. 4.22)."
         exit 1
       fi
 

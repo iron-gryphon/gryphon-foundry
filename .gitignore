@@ -46,3 +46,5 @@ bastion-key.pem
 .DS_Store
 gryphon-mirror-registry-ca.pem
 pull-secret.json
+# Local archives (stale state/keys)
+.local-archive/

@@ -42,7 +42,7 @@ variable "ssh_allowed_cidrs" {
 }
 
 variable "oc_release" {
-  description = "Release channel for openshift-client and oc-mirror on bastion (e.g. stable-4.20, 4.20.0). Must match ocp_version for mirroring."
+  description = "Release channel for openshift-client and oc-mirror on bastion (e.g. stable-4.22, 4.22.0). Must match ocp_version for mirroring."
   type        = string
 }
 

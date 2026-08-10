@@ -1,6 +1,6 @@
-# Example ImageSetConfiguration for oc-mirror plugin v2 (OpenShift Container Platform 4.20).
+# Example ImageSetConfiguration for oc-mirror plugin v2 (OpenShift Container Platform 4.22).
 # Source: Red Hat "Mirroring images for a disconnected installation using the oc-mirror plugin v2"
-#   https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/disconnected_environments/about-installing-oc-mirror-v2
+#   https://docs.redhat.com/en/documentation/openshift_container_platform/4.22/html/disconnected_environments/about-installing-oc-mirror-v2
 #
 # Copy to imageset-config.yaml and adjust minVersion/maxVersion to the z-stream you will install
 # (see terraform.tfvars ocp_version and release notes). Set both to the same version to pin.
@@ -27,25 +27,25 @@
 #   serverless-operator — OpenShift Serverless (Knative)
 #   servicemeshoperator3 — OpenShift Service Mesh 3 (verify package name for your OCP z-stream; SM2 used servicemeshoperator)
 #   cert-manager-operator — cert-manager Operator for Red Hat OpenShift (application TLS/certificate lifecycle; not the community Jetstack bundle)
-#     Docs: https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/security_and_compliance/cert-manager-operator-for-red-hat-openshift
+#     Docs: https://docs.redhat.com/en/documentation/openshift_container_platform/4.22/html/security_and_compliance/cert-manager-operator-for-red-hat-openshift
 #
-# --- Catalog / index alignment (OCP 4.20) ---
-# Red Hat publishes versioned operator catalog images; the tag must match your cluster minor (here v4.20):
-#   registry.redhat.io/redhat/redhat-operator-index:v4.20
+# --- Catalog / index alignment (OCP 4.22) ---
+# Red Hat publishes versioned operator catalog images; the tag must match your cluster minor (here v4.22):
+#   registry.redhat.io/redhat/redhat-operator-index:v4.22
 # Other standard catalogs for the same minor (list may change; confirm with commands below):
-#   registry.redhat.io/redhat/certified-operator-index:v4.20
-#   registry.redhat.io/redhat/community-operator-index:v4.20
-#   registry.redhat.io/redhat/redhat-marketplace-index:v4.20
-# Doc: "About installing the oc-mirror plugin v2" (OCP 4.20 Disconnected environments)
-#   https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/disconnected_environments/about-installing-oc-mirror-v2
+#   registry.redhat.io/redhat/certified-operator-index:v4.22
+#   registry.redhat.io/redhat/community-operator-index:v4.22
+#   registry.redhat.io/redhat/redhat-marketplace-index:v4.22
+# Doc: "About installing the oc-mirror plugin v2" (OCP 4.22 Disconnected environments)
+#   https://docs.redhat.com/en/documentation/openshift_container_platform/4.22/html/disconnected_environments/about-installing-oc-mirror-v2
 #
 # --- Bastion: confirm catalog images and package names (requires pull secret with registry.redhat.io) ---
 # List catalog image references recommended for your OpenShift version:
-#   oc mirror list operators --catalogs --version=4.20
+#   oc mirror list operators --catalogs --version=4.22
 # List all packages in the Red Hat Operators catalog (matches this file's catalog: line):
-#   oc mirror list operators --catalog registry.redhat.io/redhat/redhat-operator-index:v4.20
+#   oc mirror list operators --catalog registry.redhat.io/redhat/redhat-operator-index:v4.22
 # Narrow to one package and see channels / update paths (replace PACKAGE):
-#   oc mirror list operators --catalog registry.redhat.io/redhat/redhat-operator-index:v4.20 --package PACKAGE
+#   oc mirror list operators --catalog registry.redhat.io/redhat/redhat-operator-index:v4.22 --package PACKAGE
 # Examples: openshift-gitops-operator, serverless-operator, servicemeshoperator3, cert-manager-operator
 #
 # --- Troubleshooting failed mirrors ---
@@ -66,12 +66,12 @@ archiveSize: 4
 mirror:
   platform:
     channels:
-      - name: stable-4.20
-        minVersion: 4.20.17
-        maxVersion: 4.20.17
+      - name: stable-4.22
+        minVersion: 4.22.8
+        maxVersion: 4.22.8
     graph: true
   operators:
-    - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.20
+    - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.22
       packages:
         - name: openshift-gitops-operator
         - name: serverless-operator

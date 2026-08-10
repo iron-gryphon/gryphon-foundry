@@ -19,13 +19,13 @@ variable "aws_account_id" {
 }
 
 variable "ocp_version" {
-  description = "OpenShift/RHCOS version (e.g., 4.20, 4.21). Used for RHCOS mirror path and AMI naming."
+  description = "OpenShift/RHCOS version (e.g., 4.22, 4.21). Used for RHCOS mirror path and AMI naming."
   type        = string
-  default     = "4.20"
+  default     = "4.22"
 }
 
 variable "rhcos_mirror_base" {
-  description = "RHCOS mirror path: 'latest' for top-level or '4.20/latest' for version-specific. Defaults to ocp_version/latest."
+  description = "RHCOS mirror path: 'latest' for top-level or '4.22/latest' for version-specific. Defaults to ocp_version/latest."
   type        = string
   default     = ""
 }
