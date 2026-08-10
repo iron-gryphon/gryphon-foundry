@@ -97,9 +97,9 @@ variable "ocp_ingress_base_domain" {
 }
 
 variable "ocp_version" {
-  description = "OpenShift/RHCOS version for AMI import (e.g., 4.20, 4.21)"
+  description = "OpenShift/RHCOS version for AMI import (e.g., 4.22, 4.21)"
   type        = string
-  default     = "4.20"
+  default     = "4.22"
 }
 
 # -----------------------------------------------------------------------------
@@ -118,7 +118,7 @@ variable "import_rhcos_ami" {
 }
 
 variable "rhcos_mirror_base" {
-  description = "RHCOS mirror path (e.g. '4.20/latest' or 'latest'). Empty defaults to ocp_version/latest."
+  description = "RHCOS mirror path (e.g. '4.22/latest' or 'latest'). Empty defaults to ocp_version/latest."
   type        = string
   default     = ""
 }
@@ -171,7 +171,7 @@ variable "bastion_ssh_allowed_cidrs" {
 }
 
 variable "bastion_oc_cli_version" {
-  description = "OpenShift CLI / oc-mirror release channel on bastion (e.g. stable-4.20, 4.20.0, latest-4.20). When empty, uses stable-<ocp_version> so oc and oc-mirror match ocp_version."
+  description = "OpenShift CLI / oc-mirror release channel on bastion (e.g. stable-4.22, 4.22.0, latest-4.22). When empty, uses stable-<ocp_version> so oc and oc-mirror match ocp_version."
   type        = string
   default     = ""
 }

@@ -18,9 +18,9 @@ Imports Red Hat CoreOS (RHCOS) from [mirror.openshift.com](https://mirror.opensh
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `ocp_version` | OpenShift version (e.g. 4.20) | 4.20 |
+| `ocp_version` | OpenShift version (e.g. 4.22) | 4.22 |
 | `import_rhcos_ami` | Run the import (set false if AMI already exists) | true |
-| `rhcos_mirror_base` | Mirror path (e.g. `4.20/latest` or `latest`) | `ocp_version/latest` |
+| `rhcos_mirror_base` | Mirror path (e.g. `4.22/latest` or `latest`) | `ocp_version/latest` |
 
 ## Outputs
 

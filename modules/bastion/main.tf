@@ -59,6 +59,8 @@ resource "aws_instance" "bastion" {
   subnet_id                   = var.nest_public_subnet_ids[0]
   vpc_security_group_ids      = [aws_security_group.bastion.id]
   associate_public_ip_address = true
+  # Re-bootstrap when oc_release / mirror CA / pull-secret path in user_data changes
+  user_data_replace_on_change = true
 
   root_block_device {
     volume_type           = "gp3"
